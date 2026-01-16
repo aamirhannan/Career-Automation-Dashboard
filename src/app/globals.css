@@ -79,6 +79,45 @@
   }
 }
 
+/* Date Range Picker Dark Overrides */
+.calendar-dark-override .rdrCalendarWrapper,
+.calendar-dark-override .rdrDateDisplayWrapper,
+.calendar-dark-override .rdrDateDisplay {
+  background-color: #1a1c23 !important;
+  color: #fff !important;
+}
+
+.calendar-dark-override .rdrDateDisplayItem {
+  background-color: #272a34 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.calendar-dark-override .rdrDateDisplayItem input {
+  color: #fff !important;
+}
+
+.calendar-dark-override .rdrMonthAndYearWrapper {
+  padding-top: 5px !important;
+}
+
+.calendar-dark-override .rdrMonthName,
+.calendar-dark-override .rdrWeekDay {
+  color: #94a3b8 !important;
+}
+
+.calendar-dark-override .rdrDayNumber span {
+  color: #cbd5e1 !important;
+}
+
+.calendar-dark-override .rdrDayPassive .rdrDayNumber span {
+  color: #475569 !important;
+}
+
+.calendar-dark-override .rdrDayToday .rdrDayNumber span:after {
+  background: #7c3aed !important;
+}
+
+
 @layer base {
   * {
     @apply border-border;

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/constants';
-import { LayoutDashboard, FileText, Settings, BarChart, Mail, Users } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, BarChart, Mail, Users, List } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -17,6 +17,7 @@ export default function Sidebar() {
             case 'bar-chart': return <BarChart size={20} />;
             case 'mail': return <Mail size={20} />;
             case 'users': return <Users size={20} />;
+            case 'list': return <List size={20} />;
             default: return <LayoutDashboard size={20} />;
         }
     };

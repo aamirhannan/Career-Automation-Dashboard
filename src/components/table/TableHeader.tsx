@@ -5,7 +5,7 @@ export default function TableHeader() {
                 <th className="px-6 py-4 text-left">Company / Role</th>
                 <th className="px-6 py-4 text-left">Date</th>
                 <th className="px-6 py-4 text-left">Status</th>
-                <th className="px-6 py-4 text-left">Platform</th>
+                <th className="px-6 py-4 text-left">Type</th>
                 <th className="px-6 py-4 text-right">Actions</th>
             </tr>
         </thead>

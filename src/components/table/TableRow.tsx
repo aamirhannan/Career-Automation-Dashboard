@@ -1,6 +1,6 @@
 'use client';
 
-import { ActivityLog } from '@/lib/types';
+import { ActivityLog, ApplicationStatus } from '@/lib/types';
 import StatusBadge from './StatusBadge';
 import RetryButton from './RetryButton';
 import { MoreHorizontal } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function TableRow({ row }: TableRowProps) {
             <td className="px-6 py-4">
                 <div>
                     <p className="text-sm font-medium text-white">{row.company}</p>
-                    <p className="text-xs text-gray-500">{row.role}</p>
+                    <p className="text-xs text-secondary">{row.role}</p>
                 </div>
             </td>
             <td className="px-6 py-4 text-sm text-gray-400">
@@ -36,19 +36,12 @@ export default function TableRow({ row }: TableRowProps) {
             <td className="px-6 py-4">
                 <StatusBadge status={row.status} />
             </td>
-            <td className="px-6 py-4 text-sm text-gray-400">
-                <span className="inline-flex items-center gap-1.5">
-                    <img
-                        src={`https://www.google.com/s2/favicons?domain=${row.platform.toLowerCase()}.com&sz=16`}
-                        alt=""
-                        className="w-4 h-4 opacity-70 grayscale group-hover:grayscale-0 transition-all"
-                    />
-                    {row.platform}
-                </span>
+            <td className="px-6 py-4 text-sm text-gray-300">
+                {row.type}
             </td>
             <td className="px-6 py-4 text-right">
-                <div className="flex items-center justify-end gap-2 opacit-0 group-hover:opacity-100 transition-opacity">
-                    {row.status === 'Rejected' && <RetryButton />}
+                <div className="flex items-center justify-end gap-2">
+                    {row.status !== 'Success' && <RetryButton />}
                     <IconButton
                         size="small"
                         onClick={handleClick}
