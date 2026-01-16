@@ -2,26 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Dark Theme Palette (HSL) */
+    --dark-900: 228 17% 6%;
+    /* #0d0e12 */
+    --dark-800: 227 15% 12%;
+    /* #1a1c23 */
+    --dark-700: 226 14% 18%;
+    /* #272a34 */
+
+    --primary-default: 262 83% 58%;
+    /* #7c3aed */
+    --primary-hover: 263 70% 50%;
+    /* #6d28d9 */
+    --primary-glow: 258 90% 66%;
+    /* #8b5cf6 */
+
+    --secondary-default: 186 86% 53%;
+    /* #22d3ee */
+
+    --success: 160 84% 39%;
+    /* #10b981 */
+    --warning: 38 92% 50%;
+    /* #f59e0b */
+    --error: 0 84% 60%;
+    /* #ef4444 */
+
+    /* Semantic Mappings */
+    --background: var(--dark-900);
+    --foreground: 210 40% 98%;
+    /* Slate-200 equivalent */
+
+    --card: var(--dark-800);
+    --card-foreground: 210 40% 98%;
+
+    --popover: var(--dark-800);
+    --popover-foreground: 210 40% 98%;
+
+    --primary: var(--primary-default);
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: var(--secondary-default);
+    --secondary-foreground: 228 17% 6%;
+
+    --muted: var(--dark-700);
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: var(--secondary-default);
+    --accent-foreground: 228 17% 6%;
+
+    --destructive: var(--error);
+    --destructive-foreground: 210 40% 98%;
+
+    --border: var(--dark-700);
+    --input: var(--dark-700);
+    --ring: var(--primary-default);
+
+    --radius: 0.5rem;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .glass-panel {
+    @apply bg-dark-800/60 backdrop-blur-md border border-dark-700/50 shadow-glass;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
   }
 }

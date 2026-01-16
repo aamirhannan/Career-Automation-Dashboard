@@ -1,0 +1,221 @@
+# LLM UI Generation Requirements (Career Automation Dashboard)
+
+This document defines strict constraints and decomposition rules for generating the UI using an LLM.
+The goal: deterministic, componentized, production‑ready code with no tech drift.
+
+---
+
+## 1. Tech Stack (Hard Constraints)
+
+The LLM MUST only use:
+
+* Framework: Next.js 14 (App Router)
+* Language: TypeScript (strict mode)
+* Styling: TailwindCSS (custom theme below)
+* UI Library: MUI v5 (only for base primitives: Button, Tooltip, Avatar, IconButton, Menu, Dialog)
+* Charts: Recharts (no Chart.js, no D3)
+* Icons: lucide-react only
+* State: React Server Components + minimal client components
+* Animations: Framer Motion (only where specified)
+
+Forbidden:
+
+* No CSS files
+* No inline styles
+* No styled-components
+* No shadcn
+* No Radix
+* No Mantine
+
+---
+
+## 2. Tailwind Theme (Authoritative)
+
+The following Tailwind config is canonical and must be used for all color tokens and shadows:
+
+```ts
+/** @type {import('tailwindcss').Config} */
+export default {
+  darkMode: 'class',
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: {
+    extend: {
+      colors: {
+        dark: {
+          900: '#0d0e12',
+          800: '#1a1c23',
+          700: '#272a34',
+        },
+        primary: {
+          DEFAULT: '#7c3aed',
+          hover: '#6d28d9',
+          glow: '#8b5cf6',
+        },
+        secondary: {
+          DEFAULT: '#22d3ee',
+          dim: 'rgba(34, 211, 238, 0.1)',
+        },
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#ef4444',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      boxShadow: {
+        glow: '0 0 20px -5px rgba(124, 58, 237, 0.5)',
+        glass: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+      }
+    },
+  },
+  plugins: [],
+}
+```
+
+All UI colors must reference these tokens. No hex literals in components.
+
+---
+
+## 3. Component Decomposition Rules
+
+Every screen must be decomposed as:
+
+### Level 0 — Pages
+
+* app/(dashboard)/page.tsx
+
+### Level 1 — Layout
+
+* DashboardLayout
+
+  * TopNav
+  * Sidebar
+  * MainGrid
+
+### Level 2 — Feature Blocks
+
+Hero Metrics:
+
+* MetricCard
+* MetricValue
+* MetricIcon
+
+Charts:
+
+* ApplicationVelocityChart
+* ApplicationStatusDonut
+
+Table:
+
+* RecentActivityTable
+
+  * TableHeader
+  * TableRow
+  * StatusBadge
+  * RetryButton
+
+### Level 3 — Atomic UI
+
+* GlassCard
+* GlowBorder
+* SectionTitle
+* StatNumber
+
+No component may exceed 150 LOC.
+Each component must:
+
+* Have a single responsibility
+* Receive typed props
+* Export as default
+
+---
+
+## 4. Rendering Rules
+
+* Layout components = Server Components
+* Charts = Client Components
+* Tables = Server + Client Row Actions
+
+Folder structure:
+
+```
+src/
+  app/
+    (dashboard)/
+      layout.tsx
+      page.tsx
+  components/
+    layout/
+    charts/
+    metrics/
+    table/
+    ui/
+  lib/
+    types.ts
+    constants.ts
+```
+
+---
+
+## 5. Glassmorphism Standard
+
+All cards must use:
+
+* bg-dark-800/60
+* backdrop-blur-xl
+* border border-white/10
+* shadow-glass
+* rounded-2xl
+
+Glow elements must use:
+
+* shadow-glow
+* ring-1 ring-primary/40
+
+---
+
+## 6. LLM Code Generation Protocol
+
+When generating code, the LLM must:
+
+1. First output a component tree diagram
+2. Then generate types
+3. Then generate UI primitives
+4. Then compose features
+5. Then assemble the page
+
+Each step in a separate response.
+
+---
+
+## 7. Determinism Rules
+
+* No creative liberties
+* No replacing libraries
+* No skipping components
+* No inline mock styles
+* No uncontrolled props
+
+If a requested UI violates constraints, the LLM must:
+
+* Reject
+* Explain which rule is violated
+* Offer a compliant alternative
+
+---
+
+## 8. Visual Target
+
+Target aesthetic:
+
+* Cyberpunk‑Clean
+* Deep space dark mode
+* Subtle neon glow
+* High‑density information
+* Zero visual noise
+
+Dribbble‑grade fidelity.
+
+---
+
+This file acts as the single source of truth for all future UI code generation.
