@@ -4,9 +4,10 @@ import { useState } from 'react';
 import ResumeControlPanel from '@/components/resume/ResumeControlPanel';
 import ResumePreviewPanel from '@/components/resume/ResumePreviewPanel';
 import ResumeHistoryTable, { ResumeLog } from '@/components/resume/ResumeHistoryTable';
+import ResumeEditorModal from '@/components/resume/ResumeEditorModal';
 import { ApplicationStatus } from '@/lib/types';
 import { Drawer, IconButton, Divider, Button } from '@mui/material';
-import { X, Download, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
 
 const MOCK_HISTORY: ResumeLog[] = [
     {
@@ -27,6 +28,36 @@ const MOCK_HISTORY: ResumeLog[] = [
     }
 ];
 
+// Mock data content for the editor
+const MOCK_RESUME_CONTENT = {
+    name: "Alex Roberts",
+    email: "alex.roberts@example.com",
+    phone: "(555) 123-4567",
+    location: "San Francisco, CA",
+    summary: "Highly skilled Frontend Engineer with 5+ years of experience building scalable web applications. Proven track record in optimizing performance and delivering high-quality user experiences. Tailored specifically for Target Company, with a focus on modern stack technologies.",
+    experience: [
+        {
+            role: "Senior Software Engineer",
+            company: "TechCorp Inc.",
+            period: "2021 - Present",
+            points: [
+                "Led the migration of legacy monolith to microservices, reducing deployment time by 40%.",
+                "Mentored generic junior developers and established code review standards.",
+                "Implemented real-time features using WebSockets, increasing user engagement by 25%."
+            ]
+        },
+        {
+            role: "Software Developer",
+            company: "Startup X",
+            period: "2018 - 2021",
+            points: [
+                "Built the MVP for the core product using React and Firebase.",
+                "Collaborated with designers to implement pixel-perfect UIs."
+            ]
+        }
+    ]
+};
+
 export default function ResumeBuilderPage() {
     const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'GENERATION' | 'SUCCESS' | 'FAILED'>('IDLE');
     const [history, setHistory] = useState<ResumeLog[]>(MOCK_HISTORY);
@@ -36,6 +67,10 @@ export default function ResumeBuilderPage() {
     // Drawer State
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedResume, setSelectedResume] = useState<ResumeLog | null>(null);
+
+    // Editor Modal State
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [editorData, setEditorData] = useState<any>(MOCK_RESUME_CONTENT);
 
     const handleGenerate = async (profile: string, jobDescription: string) => {
         // Mocking the generation pipeline
@@ -82,6 +117,17 @@ export default function ResumeBuilderPage() {
         document.body.removeChild(link);
     };
 
+    const handleEditResume = () => {
+        // In a real app, we'd fetch the resume content here
+        setIsEditorOpen(true);
+    };
+
+    const handleSaveResume = (newData: any) => {
+        setEditorData(newData);
+        console.log("Saved new resume data:", newData);
+        // Here you would send update to backend
+    };
+
     return (
         <div className="space-y-8 pb-10">
             {/* Page Header */}
@@ -109,7 +155,7 @@ export default function ResumeBuilderPage() {
                         status={status}
                         score={currentScore}
                         addedKeywords={addedKeywords}
-                        onEdit={() => console.log('Edit clicked')}
+                        onEdit={handleEditResume}
                     />
                 </div>
             </div>
@@ -122,6 +168,14 @@ export default function ResumeBuilderPage() {
                     onDownload={handleDownloadResume}
                 />
             </div>
+
+            {/* Editor Modal */}
+            <ResumeEditorModal
+                open={isEditorOpen}
+                onClose={() => setIsEditorOpen(false)}
+                initialData={editorData}
+                onSave={handleSaveResume}
+            />
 
             {/* PDF Preview Drawer */}
             <Drawer
@@ -154,6 +208,14 @@ export default function ResumeBuilderPage() {
                             )}
                         </div>
                         <div className="flex items-center gap-2">
+                            <IconButton
+                                onClick={() => { setIsDrawerOpen(false); handleEditResume(); }}
+                                sx={{ color: '#94a3b8', '&:hover': { color: '#fff' } }}
+                                title="Edit Content"
+                            >
+                                <Pencil size={20} />
+                            </IconButton>
+                            <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
                             <Button
                                 variant="contained"
                                 startIcon={<Download size={18} />}
