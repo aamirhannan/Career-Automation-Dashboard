@@ -10,8 +10,8 @@ export default function DashboardPage() {
         <>
             <div className="flex items-start justify-between mb-8">
                 <div>
-                    {/* Replaced generic Title with nothing or could add it back if needed, 
-               but design shows simple layout. I'll keep the filter align to top right */}
+                    <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
+                    <p className="text-sm text-gray-400">Overview of your automated job application performance</p>
                 </div>
                 <DashboardFilter />
             </div>
