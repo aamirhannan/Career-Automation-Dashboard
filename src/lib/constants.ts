@@ -2,8 +2,8 @@ import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard' },
-  { label: 'Resume Builder', href: '/generate-reseum', icon: 'file-text' },
-  { label: 'Email Agent', href: '/email-agent', icon: 'mail' },
+  { label: 'Resume PDF Generator', href: '/generate-reseum', icon: 'file-text' },
+  { label: 'Email Automation', href: '/email-agent', icon: 'mail' },
   { label: 'Founder Outreach', href: '/founder-outreach', icon: 'users' },
   { label: 'Logs', href: '/logs', icon: 'list' },
   { label: 'Settings', href: '/settings', icon: 'settings' },
@@ -235,7 +235,13 @@ export const MOCK_METRICS: MetricItem[] = [
     value: '246',
     trend: '+15% this week',
     status: 'up',
-  },
+  },{
+    id: 'resume-pdf-generator',
+    label: 'Resume PDF Generator',
+    value: '246',
+    trend: '+15% this week',
+    status: 'up',
+  }
 ];
 
 export const MOCK_DAILY_EMAILS: DailyEmailDataPoint[] = [
