@@ -1,4 +1,23 @@
-import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog, NavItem, JobRole, OutreachType, ApplicationStatus, LogEntry, LogStatus, LogType } from './types';
+import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog, NavItem, JobRole, OutreachType, ApplicationStatus, LogEntry, LogStatus, LogType, HeatmapDataPoint } from './types';
+import { subDays, format } from 'date-fns';
+
+const generateMockHeatmapData = (): HeatmapDataPoint[] => {
+  const data: HeatmapDataPoint[] = [];
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const date = subDays(today, i);
+    // Random count between 0 and 15, weighted towards 0-5
+    const count = Math.random() > 0.7 ? Math.floor(Math.random() * 15) : Math.floor(Math.random() * 5);
+    data.push({
+      date: format(date, 'yyyy-MM-dd'),
+      count: count,
+    });
+  }
+  return data.reverse();
+};
+
+export const MOCK_HEATMAP_DATA = generateMockHeatmapData();
+
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard' },

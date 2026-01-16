@@ -81,3 +81,8 @@ export interface NavItem {
   href: string;
   icon: 'layout-dashboard' | 'file-text' | 'settings' | 'bar-chart' | 'mail' | 'users' | 'list';
 }
+
+export interface HeatmapDataPoint {
+  date: string;
+  count: number;
+}
