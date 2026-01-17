@@ -12,6 +12,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { DashboardService } from '@/services/dashboardService';
 import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog, HeatmapDataPoint } from '@/lib/types';
 import { startOfDay, endOfDay } from 'date-fns';
+import { Switch, FormControlLabel } from '@mui/material';
 
 export default function DashboardPage() {
     const [metrics, setMetrics] = useState<MetricItem[]>([]);
@@ -22,11 +23,16 @@ export default function DashboardPage() {
 
     // Loading states
     const [loading, setLoading] = useState(true);
+    const [showMockData, setShowMockData] = useState(false);
 
     // Filters
     const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>(null);
 
     const fetchData = useCallback(async () => {
+        // If showing mock data, do not fetch real data. 
+        // Note: The switching logic is handled in the useEffect below.
+        // This function is purely for the API call.
+
         setLoading(true);
         try {
             const range = dateRange ? {
@@ -63,8 +69,17 @@ export default function DashboardPage() {
     }, [dateRange]);
 
     useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        if (showMockData) {
+            setMetrics(MOCK_METRICS);
+            setRoleDistribution(MOCK_ROLE_DISTRIBUTION);
+            setDailyEmails(MOCK_DAILY_EMAILS);
+            setHeatmapData(MOCK_HEATMAP_DATA);
+            setActivity(MOCK_ACTIVITY);
+            setLoading(false);
+        } else {
+            fetchData();
+        }
+    }, [showMockData, fetchData]);
 
     const handleDateRangeChange = (range: { startDate: Date; endDate: Date } | null) => {
         setDateRange(range);
@@ -86,7 +101,32 @@ export default function DashboardPage() {
                     <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
                     <p className="text-sm text-gray-400">Overview of your automated job application performance</p>
                 </div>
-                <DashboardFilter onDateRangeChange={handleDateRangeChange} />
+                <div className="flex items-center gap-4">
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showMockData}
+                                onChange={(e) => setShowMockData(e.target.checked)}
+                                sx={{
+                                    '& .MuiSwitch-switchBase.Mui-checked': {
+                                        color: '#a855f7',
+                                    },
+                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                                        backgroundColor: '#a855f7',
+                                        opacity: 1,
+                                    },
+                                    '& .MuiSwitch-track': {
+                                        backgroundColor: 'rgba(168, 85, 247, 0.3)', // Purple tint for visibility
+                                        opacity: 1,
+                                    },
+                                }}
+                            />
+                        }
+                        label="See sample data"
+                        sx={{ color: 'white', '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
+                    />
+                    <DashboardFilter onDateRangeChange={handleDateRangeChange} />
+                </div>
             </div>
 
             {/* Metrics Row */}
