@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Tabs, Tab, Box, TextField, Button,
     Card, CardContent, IconButton, Chip,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ApplicationEditorModal from '@/components/email/ApplicationEditorModal';
+import { EmailService } from '@/services/emailService';
 
 // --- Types ---
 interface EmailDraft {
@@ -21,7 +22,7 @@ interface EmailDraft {
     targetEmail: string;
     subject: string;
     body: string;
-    status: 'draft' | 'ready';
+    status: 'PENDING' | 'IN_PROGRESS' | 'WAITING' | 'SUCCESS' | 'FAILED' | 'REJECTED';
     createdAt: Date;
     resumeData: any; // Include resume data structure
 }
@@ -31,7 +32,7 @@ interface SentEmail {
     role: string;
     recipient: string;
     sentAt: string;
-    status: 'sent' | 'opened' | 'replied';
+    status: 'SUCCESS' | 'REJECTED';
 }
 
 // --- Mock Data ---
@@ -50,24 +51,6 @@ const MOCK_RESUME_DATA = {
         }
     ]
 };
-
-const MOCK_DRAFTS: EmailDraft[] = [
-    {
-        id: '1',
-        role: 'Senior Frontend Dev',
-        targetEmail: 'hiring@techcorp.com',
-        subject: 'Application for Senior Frontend Dev - Alex Roberts',
-        body: "Dear Hiring Team,\n\nI came across the Senior Frontend Developer opportunity at TechCorp and knew I had to apply. With 5 years of experience in React and performance optimization...",
-        status: 'ready',
-        createdAt: new Date(),
-        resumeData: MOCK_RESUME_DATA
-    }
-];
-
-const MOCK_HISTORY: SentEmail[] = [
-    { id: '1', role: 'Ux Designer', recipient: 'jobs@designstudio.co', sentAt: '2 hours ago', status: 'opened' },
-    { id: '2', role: 'React Developer', recipient: 'careers@startup.io', sentAt: 'Yesterday', status: 'sent' },
-];
 
 // --- Theme ---
 const darkTheme = createTheme({
@@ -97,8 +80,54 @@ const darkTheme = createTheme({
 
 export default function EmailAgentPage() {
     const [activeTab, setActiveTab] = useState(0);
-    const [drafts, setDrafts] = useState<EmailDraft[]>(MOCK_DRAFTS);
-    const [history, setHistory] = useState<SentEmail[]>(MOCK_HISTORY);
+    const [drafts, setDrafts] = useState<EmailDraft[]>([]);
+    const [history, setHistory] = useState<SentEmail[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchEmails = async () => {
+            try {
+                const emails = await EmailService.getEmails();
+
+                const newDrafts: EmailDraft[] = [];
+                const newHistory: SentEmail[] = [];
+
+                emails.forEach(email => {
+                    // Check statuses that belong in history: SUCCESS, REJECTED
+                    if (email.status === 'SUCCESS' || email.status === 'REJECTED') {
+                        newHistory.push({
+                            id: email.id,
+                            role: email.role,
+                            recipient: email.targetEmail,
+                            sentAt: new Date(email.updatedAt).toLocaleDateString(),
+                            status: email.status // 'SUCCESS' | 'REJECTED'
+                        });
+                    } else {
+                        // Drafts (Pending, Waiting, Failed, In Progress)
+                        newDrafts.push({
+                            id: email.id,
+                            role: email.role,
+                            targetEmail: email.targetEmail,
+                            subject: email.subjectLine || `Application for ${email.role}`,
+                            body: email.coverLetter || "Generating content...",
+                            status: email.status as any,
+                            createdAt: new Date(email.createdAt),
+                            resumeData: MOCK_RESUME_DATA // Placeholder
+                        });
+                    }
+                });
+
+                setDrafts(newDrafts);
+                setHistory(newHistory);
+            } catch (error) {
+                console.error("Failed to fetch emails:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchEmails();
+    }, []);
 
     // Form State
     const [role, setRole] = useState('');
@@ -110,57 +139,91 @@ export default function EmailAgentPage() {
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingDraft, setEditingDraft] = useState<EmailDraft | null>(null);
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!role || !email || !jd) return;
 
         setIsGenerating(true);
-        // Simulate AI Generation
-        setTimeout(() => {
-            const newDraft: EmailDraft = {
-                id: Date.now().toString(),
+        try {
+            const response = await EmailService.createEmail({
                 role,
-                targetEmail: email,
-                subject: `Application for ${role} Role`,
-                body: `Dear Hiring Manager,\n\nI am writing to express my strong interest in the ${role} position. Based on the job description, my background in...`,
-                status: 'draft',
-                createdAt: new Date(),
-                resumeData: MOCK_RESUME_DATA // Use mock data for now
+                jobDescription: jd,
+                targetEmail: email
+            });
+
+            // Status is PENDING initially (in queue for generation)
+            const newDraft: EmailDraft = {
+                id: response.id,
+                role: response.role,
+                targetEmail: response.targetEmail,
+                subject: response.subjectLine || `Application for ${response.role}`,
+                body: response.coverLetter || "Generating content...",
+                status: 'PENDING', // PENDING means generating
+                createdAt: new Date(response.createdAt),
+                resumeData: MOCK_RESUME_DATA // Placeholder
             };
+
             setDrafts([newDraft, ...drafts]);
-            setIsGenerating(false);
             // Reset form
             setRole('');
             setEmail('');
             setJd('');
-        }, 1500);
-    };
-
-    const handleSend = (id: string) => {
-        const draft = drafts.find(d => d.id === id);
-        if (draft) {
-            setHistory([{
-                id: draft.id,
-                role: draft.role,
-                recipient: draft.targetEmail,
-                sentAt: 'Just now',
-                status: 'sent'
-            }, ...history]);
-            setDrafts(drafts.filter(d => d.id !== id));
+        } catch (error) {
+            console.error('Failed to generate email:', error);
+        } finally {
+            setIsGenerating(false);
         }
     };
 
-    const handleDelete = (id: string) => {
-        setDrafts(drafts.filter(d => d.id !== id));
+    const handleSend = async (id: string) => {
+        const draft = drafts.find(d => d.id === id);
+        if (draft) {
+            try {
+                // Determine if we are approving a WAITING draft -> back to PENDING (for sending)
+                if (draft.status === 'WAITING') {
+                    await EmailService.updateEmail(draft.id, { status: 'PENDING' });
+                    // Optimistically move to history or update UI
+                    setHistory([{
+                        id: draft.id,
+                        role: draft.role,
+                        recipient: draft.targetEmail,
+                        sentAt: 'Just now',
+                        status: 'SUCCESS'
+                    }, ...history]);
+                    setDrafts(drafts.filter(d => d.id !== id));
+                }
+            } catch (error) {
+                console.error("Failed to approve email:", error);
+            }
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        const draft = drafts.find(d => d.id === id);
+        if (draft) {
+            try {
+                await EmailService.updateEmail(id, { status: 'REJECTED' });
+                // Move to history as rejected
+                setHistory([{
+                    id: draft.id,
+                    role: draft.role,
+                    recipient: draft.targetEmail,
+                    sentAt: 'Rejected just now',
+                    status: 'REJECTED'
+                }, ...history]);
+                setDrafts(drafts.filter(d => d.id !== id));
+            } catch (error) {
+                console.error("Failed to reject email:", error);
+            }
+        }
     };
 
     const handleEdit = (draft: EmailDraft) => {
+        if (draft.status !== 'WAITING') return; // Can only edit when waiting for review
         setEditingDraft(draft);
         setIsEditorOpen(true);
     };
 
     const handleSaveDraft = (newData: any) => {
-        // newData comes from ApplicationEditorModal, with structure { id, role, ..., resume: {} }
-        // We need to map it back to our EmailDraft structure
         if (!editingDraft) return;
 
         const updatedDraft: EmailDraft = {
@@ -168,7 +231,7 @@ export default function EmailAgentPage() {
             subject: newData.subject,
             body: newData.body,
             resumeData: newData.resume,
-            status: 'ready' // Mark as ready after edit
+            status: 'WAITING' // Remains waiting after edit
         };
 
         setDrafts(drafts.map(d => d.id === editingDraft.id ? updatedDraft : d));
@@ -254,9 +317,7 @@ export default function EmailAgentPage() {
                                     >
                                         {isGenerating ? 'Drafting...' : 'Generate Draft'}
                                     </Button>
-                                    <p className="text-xs text-gray-500 text-center">
-                                        AI will analyze the JD to create a tailored cover letter.
-                                    </p>
+
                                 </div>
                             </div>
                         </div>
@@ -278,68 +339,82 @@ export default function EmailAgentPage() {
                                     <p className="text-gray-500 mt-2">Generate a draft to get started.</p>
                                 </div>
                             ) : (
-                                drafts.map((draft) => (
-                                    <Card key={draft.id} sx={{ bgcolor: '#1a1c23', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
-                                        <CardContent className="p-6">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h4 className="text-lg font-bold text-white">{draft.role}</h4>
-                                                    <p className="text-sm text-gray-400 font-mono mt-1 flex items-center gap-1">
-                                                        <Mail size={12} /> {draft.targetEmail}
-                                                    </p>
+                                drafts.map((draft) => {
+                                    const isPending = draft.status === 'PENDING';
+
+                                    return (
+                                        <Card key={draft.id} sx={{ bgcolor: '#1a1c23', border: '1px solid rgba(255,255,255,0.1)', color: 'white', opacity: isPending ? 0.7 : 1 }}>
+                                            <CardContent className="p-6">
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div>
+                                                        <h4 className="text-lg font-bold text-white">{draft.role}</h4>
+                                                        <p className="text-sm text-gray-400 font-mono mt-1 flex items-center gap-1">
+                                                            <Mail size={12} /> {draft.targetEmail}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Chip
+                                                            label={isPending ? 'Generating...' : (draft.status === 'WAITING' ? 'Needs Review' : draft.status)}
+                                                            size="small"
+                                                            color={draft.status === 'WAITING' ? 'success' : 'default'}
+                                                            variant="outlined"
+                                                            icon={isPending ? <div className="animate-spin mr-1">◌</div> : undefined}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Chip
-                                                        label={draft.status === 'ready' ? 'Ready' : 'Needs Review'}
-                                                        size="small"
-                                                        color={draft.status === 'ready' ? 'success' : 'default'}
+
+                                                {isPending ? (
+                                                    <div className="space-y-3 animate-pulse">
+                                                        <div className="h-4 bg-white/10 rounded w-1/4"></div>
+                                                        <div className="h-16 bg-white/5 rounded w-full"></div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-black/30 p-4 rounded-lg mb-4 border border-white/5">
+                                                        <div className="mb-2">
+                                                            <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Subject:</span>
+                                                            <p className="text-sm font-medium text-gray-200">{draft.subject || '-'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Body Preview:</span>
+                                                            <p className="text-sm text-gray-400 line-clamp-3 mt-1 leading-relaxed">
+                                                                {draft.body || '-'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div className="flex justify-end gap-3 pt-2">
+                                                    <Button
+                                                        startIcon={<Trash2 size={16} />}
+                                                        color="error"
+                                                        onClick={() => handleDelete(draft.id)}
+                                                        sx={{ opacity: 0.8 }}
+                                                    >
+                                                        Discard
+                                                    </Button>
+                                                    <Button
+                                                        startIcon={<Edit2 size={16} />}
                                                         variant="outlined"
-                                                    />
+                                                        disabled={isPending}
+                                                        onClick={() => handleEdit(draft)}
+                                                        sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        variant="contained"
+                                                        startIcon={<Send size={16} />}
+                                                        disabled={isPending}
+                                                        onClick={() => handleSend(draft.id)}
+                                                        sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
+                                                    >
+                                                        Approve & Send
+                                                    </Button>
                                                 </div>
-                                            </div>
-
-                                            <div className="bg-black/30 p-4 rounded-lg mb-4 border border-white/5">
-                                                <div className="mb-2">
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Subject:</span>
-                                                    <p className="text-sm font-medium text-gray-200">{draft.subject}</p>
-                                                </div>
-                                                <div>
-                                                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Body Preview:</span>
-                                                    <p className="text-sm text-gray-400 line-clamp-3 mt-1 leading-relaxed">
-                                                        {draft.body}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex justify-end gap-3 pt-2">
-                                                <Button
-                                                    startIcon={<Trash2 size={16} />}
-                                                    color="error"
-                                                    onClick={() => handleDelete(draft.id)}
-                                                    sx={{ opacity: 0.8 }}
-                                                >
-                                                    Discard
-                                                </Button>
-                                                <Button
-                                                    startIcon={<Edit2 size={16} />}
-                                                    variant="outlined"
-                                                    onClick={() => handleEdit(draft)}
-                                                    sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                                                >
-                                                    Edit
-                                                </Button>
-                                                <Button
-                                                    variant="contained"
-                                                    startIcon={<Send size={16} />}
-                                                    onClick={() => handleSend(draft.id)}
-                                                    sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' } }}
-                                                >
-                                                    Approve & Send
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                ))
+                                            </CardContent>
+                                        </Card>
+                                    )
+                                })
                             )}
                         </div>
                     </div>
@@ -365,12 +440,11 @@ export default function EmailAgentPage() {
                                         <td className="p-4 text-gray-400 font-mono text-sm">{item.recipient}</td>
                                         <td className="p-4 text-gray-400 text-sm">{item.sentAt}</td>
                                         <td className="p-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.status === 'opened' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                                                item.status === 'replied' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                                                    'bg-green-500/10 text-green-400 border-green-500/20'
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.status === 'SUCCESS' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                                'bg-red-500/10 text-red-400 border-red-500/20'
                                                 }`}>
-                                                {item.status === 'opened' && <CheckCircle2 size={10} />}
-                                                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                                {item.status === 'SUCCESS' && <CheckCircle2 size={10} />}
+                                                {item.status}
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
