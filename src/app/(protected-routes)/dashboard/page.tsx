@@ -45,7 +45,7 @@ export default function DashboardPage() {
                 DashboardService.getRoleDistribution(range?.startDate, range?.endDate),
                 DashboardService.getDailyVelocity(range?.startDate, range?.endDate),
                 DashboardService.getHeatmap(range?.startDate, range?.endDate),
-                DashboardService.getRecentActivity() // Activity might ignore date range or separate param? usually strictly "recent"
+                DashboardService.getRecentActivity()
             ]);
 
             setMetrics(fetchedMetrics);

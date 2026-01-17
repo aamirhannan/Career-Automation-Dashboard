@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
   // https://supabase.com/docs/guides/auth/server-side/nextjs
   const { data: { user } } = await supabase.auth.getUser()
 
-    console.log("superbase user",user)
+    // console.log("superbase user",user)
     
   // Protected routes logic
   if (request.nextUrl.pathname.startsWith('/dashboard') || 

@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/client';
 
 // Create a singleton instance
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api', // Default to local Node backend
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api/v1', // Default to local Node backend
     headers: {
         'Content-Type': 'application/json',
     },
@@ -16,6 +16,8 @@ api.interceptors.request.use(
         
         // Get the current session
         const { data: { session } } = await supabase.auth.getSession();
+
+        console.log("Session:", session);
 
         if (session?.access_token) {
             config.headers.Authorization = `Bearer ${session.access_token}`;

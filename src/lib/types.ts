@@ -86,3 +86,13 @@ export interface HeatmapDataPoint {
   date: string;
   count: number;
 }
+
+export interface UserSettings {
+  userId: string;
+  userSettingId: string;
+  blockedEmails: string[];
+  blockedDomains: string[];
+  dailyLimit: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
