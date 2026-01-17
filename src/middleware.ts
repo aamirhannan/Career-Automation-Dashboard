@@ -8,9 +8,19 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error('Middleware Error: Supabase keys are missing!')
+    // Proceeding will likely fail, but let's see.
+    // actually, let's not crash the middleware with a hard throw, just let createServerClient fail if it wants, 
+    // but the ! in original code forced it. 
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl || '',
+    supabaseKey || '',
     {
       cookies: {
         getAll() {
