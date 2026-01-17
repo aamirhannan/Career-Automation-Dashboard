@@ -1,3 +1,5 @@
+'use client';
+
 import { ActivityLog } from '@/lib/types';
 import GlassCard from '@/components/ui/GlassCard';
 import SectionTitle from '@/components/ui/SectionTitle';
