@@ -2,6 +2,7 @@
 
 import { Bell, Search, User } from 'lucide-react';
 import { IconButton, Avatar, Tooltip } from '@mui/material';
+import UserProfile from './UserProfile';
 
 export default function TopNav() {
     return (
@@ -29,17 +30,7 @@ export default function TopNav() {
 
                 <div className="h-8 w-[1px] bg-white/10 mx-1" />
 
-                <div className="flex items-center gap-3 pl-2 cursor-pointer hover:bg-white/5 p-1.5 rounded-lg transition-colors">
-                    <div className="text-right hidden sm:block">
-                        <p className="text-sm font-medium text-white leading-none">Alex R.</p>
-                        <p className="text-xs text-gray-500 mt-1 leading-none">Pro Member</p>
-                    </div>
-                    <Avatar
-                        sx={{ width: 36, height: 36, bgcolor: '#272a34', color: '#7c3aed', border: '1px solid rgba(255,255,255,0.1)' }}
-                    >
-                        <User size={18} />
-                    </Avatar>
-                </div>
+                <UserProfile />
             </div>
         </header>
     );
