@@ -13,6 +13,8 @@
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.7",
     "@mui/x-data-grid": "^8.25.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.90.1",
     "@types/react-date-range": "^1.4.10",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.26.2",

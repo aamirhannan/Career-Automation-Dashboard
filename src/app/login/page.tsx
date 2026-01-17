@@ -1,11 +1,26 @@
 'use client';
 
+import { createClient } from '@/utils/supabase/client';
 import { Button, Divider } from '@mui/material';
 
 import Link from 'next/link';
 import { CheckCircle2, Mail, FileText, Send, Zap, ArrowRight, LayoutDashboard as DashboardIcon, Briefcase } from 'lucide-react';
 
 export default function LoginPage() {
+    const handleGoogleLogin = async () => {
+        const supabase = createClient();
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+            },
+        });
+
+        if (error) {
+            console.error('Error logging in:', error.message);
+        }
+    };
+
     return (
         <div className="flex min-h-screen w-full bg-dark-900 text-white overflow-hidden">
             {/* Left Section - Form */}
@@ -32,7 +47,7 @@ export default function LoginPage() {
                     {/* Google Login Button */}
                     <button
                         className="w-full h-14 bg-white hover:bg-gray-50 text-dark-900 font-medium text-lg rounded-xl flex items-center justify-center gap-3 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-8"
-                        onClick={() => console.log('Google Login Clicked')}
+                        onClick={handleGoogleLogin}
                     >
                         <svg className="w-6 h-6" viewBox="0 0 24 24">
                             <path
