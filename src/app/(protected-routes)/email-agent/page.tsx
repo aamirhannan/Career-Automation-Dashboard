@@ -140,6 +140,33 @@ export default function EmailAgentPage() {
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editingDraft, setEditingDraft] = useState<EmailDraft | null>(null);
 
+    const handleJdChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const text = e.target.value;
+        setJd(text);
+
+        // Auto-extract Email
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+        const foundEmail = text.match(emailRegex);
+        if (foundEmail) {
+            setEmail(foundEmail[0]);
+        }
+
+        // Auto-extract Role using Regex
+        const roles = [
+            { key: 'FRONTEND', regex: /front[-\s]?end/i },
+            { key: 'BACKEND', regex: /back[-\s]?end/i },
+            { key: 'FULLSTACK', regex: /full[-\s]?stack/i },
+            { key: 'SOFTWAREENGINEER', regex: /software[-\s]?engineer/i }
+        ];
+
+        for (const { key, regex } of roles) {
+            if (regex.test(text)) {
+                setRole(key);
+                break;
+            }
+        }
+    };
+
     const handleGenerate = async () => {
         if (!role || !email || !jd) return;
 
@@ -264,7 +291,7 @@ export default function EmailAgentPage() {
                 {activeTab === 0 && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
                         {/* Left Col: Composer */}
-                        <div className="lg:col-span-4 space-y-6">
+                        <div className="lg:col-span-5 space-y-6">
                             <div className="bg-[#1a1c23] p-6 rounded-xl border border-white/10 shadow-lg sticky top-6">
                                 <div className="flex items-center gap-2 mb-6">
                                     <Sparkles className="text-primary" size={20} />
@@ -322,7 +349,7 @@ export default function EmailAgentPage() {
                                         variant="outlined"
                                         placeholder="Paste the full job description here..."
                                         value={jd}
-                                        onChange={(e) => setJd(e.target.value)}
+                                        onChange={handleJdChange}
                                         sx={{
                                             '& .MuiInputBase-root': { alignItems: 'flex-start' }
                                         }}
@@ -350,7 +377,7 @@ export default function EmailAgentPage() {
                         </div>
 
                         {/* Right Col: Draft Queue */}
-                        <div className="lg:col-span-8 space-y-4">
+                        <div className="lg:col-span-7 space-y-4">
                             <div className="flex items-center justify-between mb-2">
                                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                     <Clock className="text-gray-400" size={20} />
