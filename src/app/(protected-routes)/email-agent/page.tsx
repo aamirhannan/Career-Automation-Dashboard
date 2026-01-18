@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import {
     Tabs, Tab, Box, TextField, Button,
     Card, CardContent, IconButton, Chip,
-    Slider, FormControlLabel, Switch, Divider
+    Slider, FormControlLabel, Switch, Divider,
+    Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import {
     Send, Plus, Trash2, Edit2, CheckCircle2,
@@ -271,14 +272,40 @@ export default function EmailAgentPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <TextField
-                                        fullWidth
-                                        label="Job Role"
-                                        variant="outlined"
-                                        placeholder="e.g. Frontend Engineer"
-                                        value={role}
-                                        onChange={(e) => setRole(e.target.value)}
-                                    />
+                                    <FormControl fullWidth>
+                                        <InputLabel id="job-role-label">Job Role</InputLabel>
+                                        <Select
+                                            labelId="job-role-label"
+                                            value={role}
+                                            label="Job Role"
+                                            onChange={(e) => setRole(e.target.value)}
+                                            sx={{
+                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
+                                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.3)' },
+                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#7c3aed' },
+                                                color: 'white'
+                                            }}
+                                            MenuProps={{
+                                                PaperProps: {
+                                                    sx: {
+                                                        bgcolor: '#1a1c23',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        '& .MuiMenuItem-root': {
+                                                            color: 'white',
+                                                            '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' },
+                                                            '&.Mui-selected': { bgcolor: 'rgba(124, 58, 237, 0.2)', '&:hover': { bgcolor: 'rgba(124, 58, 237, 0.3)' } }
+                                                        }
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <MenuItem value="FRONTEND">FRONTEND</MenuItem>
+                                            <MenuItem value="BACKEND">BACKEND</MenuItem>
+                                            <MenuItem value="FULLSTACK">FULLSTACK</MenuItem>
+                                            <MenuItem value="SOFTWAREENGINEER">SOFTWAREENGINEER</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                     <TextField
                                         fullWidth
                                         label="Target Email"

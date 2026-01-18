@@ -6,6 +6,8 @@ const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api/v1', // Default to local Node backend
     headers: {
         'Content-Type': 'application/json',
+        
+
     },
 });
 
@@ -21,6 +23,17 @@ api.interceptors.request.use(
 
         if (session?.access_token) {
             config.headers.Authorization = `Bearer ${session.access_token}`;
+        }
+
+        // Attach SMTP credentials if available
+        const smtpEmail = process.env.NEXT_PUBLIC_SMTP_EMAIL;
+        const smtpPassword = process.env.NEXT_PUBLIC_SMTP_PASSWORD;
+
+        if (smtpEmail) {
+            config.headers['x-smtp-email'] = smtpEmail;
+        }
+        if (smtpPassword) {
+            config.headers['x-smtp-password'] = smtpPassword;
         }
 
         return config;
