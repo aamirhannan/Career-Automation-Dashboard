@@ -15,6 +15,7 @@ import {
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ApplicationEditorModal from '@/components/email/ApplicationEditorModal';
 import { EmailService } from '@/services/emailService';
+import { useSnackbar } from '@/context/SnackbarContext';
 
 // --- Types ---
 interface EmailDraft {
@@ -84,6 +85,7 @@ export default function EmailAgentPage() {
     const [drafts, setDrafts] = useState<EmailDraft[]>([]);
     const [history, setHistory] = useState<SentEmail[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const { showSnackbar } = useSnackbar();
 
     useEffect(() => {
         let isMounted = true;
@@ -122,7 +124,7 @@ export default function EmailAgentPage() {
                 });
 
                 setDrafts(newDrafts);
-                setHistory(newHistory);
+                setHistory(newHistory.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()));
             } catch (error) {
                 console.error("Failed to fetch emails:", error);
             } finally {
@@ -204,8 +206,10 @@ export default function EmailAgentPage() {
             setRole('');
             setEmail('');
             setJd('');
+            showSnackbar('Email draft generated successfully!', 'success');
         } catch (error) {
             console.error('Failed to generate email:', error);
+            showSnackbar('Failed to generate email draft.', 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -227,9 +231,11 @@ export default function EmailAgentPage() {
                         status: 'SUCCESS'
                     }, ...history]);
                     setDrafts(drafts.filter(d => d.id !== id));
+                    showSnackbar('Email approved and pushed to send queue.', 'success');
                 }
             } catch (error) {
                 console.error("Failed to approve email:", error);
+                showSnackbar('Failed to approve email.', 'error');
             }
         }
     };
@@ -404,6 +410,7 @@ export default function EmailAgentPage() {
                             ) : (
                                 drafts.map((draft) => {
                                     const isPending = draft.status === 'PENDING';
+                                    const isInProgress = draft.status === 'IN_PROGRESS';
 
                                     return (
                                         <Card key={draft.id} sx={{ bgcolor: '#1a1c23', border: '1px solid rgba(255,255,255,0.1)', color: 'white', opacity: isPending ? 0.7 : 1 }}>
@@ -450,6 +457,7 @@ export default function EmailAgentPage() {
                                                     <Button
                                                         startIcon={<Trash2 size={16} />}
                                                         color="error"
+                                                        disabled={isPending}
                                                         onClick={() => handleDelete(draft.id)}
                                                         sx={{ opacity: 0.8 }}
                                                     >
