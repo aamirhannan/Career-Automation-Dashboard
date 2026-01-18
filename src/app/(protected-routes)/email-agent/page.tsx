@@ -86,9 +86,12 @@ export default function EmailAgentPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchEmails = async () => {
             try {
                 const emails = await EmailService.getEmails();
+                if (!isMounted) return;
 
                 const newDrafts: EmailDraft[] = [];
                 const newHistory: SentEmail[] = [];
@@ -123,11 +126,17 @@ export default function EmailAgentPage() {
             } catch (error) {
                 console.error("Failed to fetch emails:", error);
             } finally {
-                setIsLoading(false);
+                if (isMounted) setIsLoading(false);
             }
         };
 
-        fetchEmails();
+        fetchEmails(); // Initial fetch
+        const interval = setInterval(fetchEmails, 30000); // Poll every 30 seconds
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, []);
 
     // Form State
