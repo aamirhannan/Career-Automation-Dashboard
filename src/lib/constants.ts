@@ -313,3 +313,17 @@ export const MOCK_ACTIVITY: ActivityLog[] = [
     type: OutreachType.FounderOutreach,
   },
 ];
+
+export const JOB_ROLE_OPTIONS = [
+    { value: 'FRONTEND', label: 'FRONTEND' },
+    { value: 'BACKEND', label: 'BACKEND' },
+    { value: 'FULLSTACK', label: 'FULLSTACK' },
+    { value: 'SOFTWAREENGINEER', label: 'SOFTWAREENGINEER' },
+];
+
+export const JOB_ROLE_MATCHERS = [
+    { key: 'FRONTEND', regex: /front[-\s]?end/i },
+    { key: 'BACKEND', regex: /back[-\s]?end/i },
+    { key: 'FULLSTACK', regex: /full[-\s]?stack/i },
+    { key: 'SOFTWAREENGINEER', regex: /software[-\s]?engineer/i }
+];

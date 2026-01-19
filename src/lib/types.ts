@@ -12,9 +12,19 @@ export enum OutreachType {
 }
 
 export enum ApplicationStatus {
-  Success = 'Success',
-  Failed = 'Failed',
-  Pending = 'Pending',
+  SUCCESS = 'Success',
+  FAILED = 'Failed',
+  PENDING = 'Pending',
+}
+
+
+export enum ResumeStatus {
+  SUCCESS = 'Success',
+  FAILED = 'Failed',
+  PENDING = 'Pending',
+  IN_PROGRESS = 'In Progress',
+  WAITING = 'Waiting',
+  REJECTED = 'Rejected',
 }
 
 export interface MetricItem {

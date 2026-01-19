@@ -2,20 +2,15 @@ import { useState } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@mui/material';
 import { FileText, Wand2 } from 'lucide-react';
+import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
 interface ResumeControlPanelProps {
     onGenerate: (profile: string, jobDescription: string) => void;
     isGenerating: boolean;
 }
 
-const RESUME_PROFILES = [
-    { id: 'frontend', label: 'Frontend Developer Profile' },
-    { id: 'fullstack', label: 'Fullstack Developer Profile' },
-    { id: 'backend', label: 'Backend Developer Profile' },
-];
-
 export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeControlPanelProps) {
-    const [selectedProfile, setSelectedProfile] = useState(RESUME_PROFILES[0].id);
+    const [selectedProfile, setSelectedProfile] = useState(JOB_ROLE_OPTIONS[0].value);
     const [jobDescription, setJobDescription] = useState('');
 
     const handleGenerate = () => {
@@ -44,8 +39,8 @@ export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeC
                         onChange={(e) => setSelectedProfile(e.target.value)}
                         className="w-full bg-dark-900/50 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer"
                     >
-                        {RESUME_PROFILES.map((profile) => (
-                            <option key={profile.id} value={profile.id} className="bg-gray-900 text-white">
+                        {JOB_ROLE_OPTIONS.map((profile) => (
+                            <option key={profile.value} value={profile.value} className="bg-gray-900 text-white">
                                 {profile.label}
                             </option>
                         ))}

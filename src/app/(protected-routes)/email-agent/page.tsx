@@ -16,6 +16,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ApplicationEditorModal from '@/components/email/ApplicationEditorModal';
 import { EmailService } from '@/services/emailService';
 import { useSnackbar } from '@/context/SnackbarContext';
+import { JOB_ROLE_OPTIONS, JOB_ROLE_MATCHERS } from '@/lib/constants';
 
 // --- Types ---
 interface EmailDraft {
@@ -163,14 +164,7 @@ export default function EmailAgentPage() {
         }
 
         // Auto-extract Role using Regex
-        const roles = [
-            { key: 'FRONTEND', regex: /front[-\s]?end/i },
-            { key: 'BACKEND', regex: /back[-\s]?end/i },
-            { key: 'FULLSTACK', regex: /full[-\s]?stack/i },
-            { key: 'SOFTWAREENGINEER', regex: /software[-\s]?engineer/i }
-        ];
-
-        for (const { key, regex } of roles) {
+        for (const { key, regex } of JOB_ROLE_MATCHERS) {
             if (regex.test(text)) {
                 setRole(key);
                 break;
@@ -342,10 +336,11 @@ export default function EmailAgentPage() {
                                                 }
                                             }}
                                         >
-                                            <MenuItem value="FRONTEND">FRONTEND</MenuItem>
-                                            <MenuItem value="BACKEND">BACKEND</MenuItem>
-                                            <MenuItem value="FULLSTACK">FULLSTACK</MenuItem>
-                                            <MenuItem value="SOFTWAREENGINEER">SOFTWAREENGINEER</MenuItem>
+                                            {JOB_ROLE_OPTIONS.map((option) => (
+                                                <MenuItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
                                     </FormControl>
                                     <TextField

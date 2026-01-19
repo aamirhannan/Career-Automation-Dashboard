@@ -1,32 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ResumeControlPanel from '@/components/resume/ResumeControlPanel';
 import ResumePreviewPanel from '@/components/resume/ResumePreviewPanel';
 import ResumeHistoryTable, { ResumeLog } from '@/components/resume/ResumeHistoryTable';
 import ResumeEditorModal from '@/components/resume/ResumeEditorModal';
-import { ApplicationStatus } from '@/lib/types';
+import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 import { Drawer, IconButton, Divider, Button } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
+import { generateResumePDF, getResumes } from '@/services/resumeService';
+import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
-const MOCK_HISTORY: ResumeLog[] = [
-    {
-        id: '1',
-        generatedAt: 'Oct 24, 2023',
-        company: 'Google',
-        role: 'Frontend Engineer',
-        status: ApplicationStatus.Success,
-        matchScore: 92
-    },
-    {
-        id: '2',
-        generatedAt: 'Oct 22, 2023',
-        company: 'Netflix',
-        role: 'Senior UI Developer',
-        status: ApplicationStatus.Failed,
-        matchScore: 0
-    }
-];
+// const MOCK_HISTORY: ResumeLog[] = [
+//     {
+//         id: '1',
+//         generatedAt: 'Oct 24, 2023',
+//         company: 'Google',
+//         role: 'Frontend Engineer',
+//         status: ApplicationStatus.Success,
+//         matchScore: 92
+//     },
+//     {
+//         id: '2',
+//         generatedAt: 'Oct 22, 2023',
+//         company: 'Netflix',
+//         role: 'Senior UI Developer',
+//         status: ApplicationStatus.Failed,
+//         matchScore: 0
+//     }
+// ];
 
 // Mock data content for the editor
 const MOCK_RESUME_CONTENT = {
@@ -60,7 +62,30 @@ const MOCK_RESUME_CONTENT = {
 
 export default function ResumeBuilderPage() {
     const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'GENERATION' | 'SUCCESS' | 'FAILED'>('IDLE');
-    const [history, setHistory] = useState<ResumeLog[]>(MOCK_HISTORY);
+    const [history, setHistory] = useState<ResumeLog[]>([]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const data = await getResumes();
+                // Map API response to ResumeLog interface
+                const mappedHistory: ResumeLog[] = data.map((item: any) => ({
+                    id: item.id,
+                    generatedAt: new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    company: '',
+                    role: item.role,
+                    status: item.status,
+                    matchScore: 0,
+                    newResumeContent: item.newResumeContent,
+                }));
+                setHistory(mappedHistory);
+            } catch (error) {
+                console.error("Failed to load resume history", error);
+            }
+        };
+
+        fetchHistory();
+    }, []);
     const [currentScore, setCurrentScore] = useState(0);
     const [addedKeywords, setAddedKeywords] = useState<string[]>([]);
 
@@ -73,35 +98,57 @@ export default function ResumeBuilderPage() {
     const [editorData, setEditorData] = useState<any>(MOCK_RESUME_CONTENT);
 
     const handleGenerate = async (profile: string, jobDescription: string) => {
-        // Mocking the generation pipeline
-        setStatus('PROCESSING');
+        try {
+            setStatus('PROCESSING');
 
-        // 1. Analyze (Mock delay)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setStatus('GENERATION');
+            // 1. Analyze (Mock delay - typically this might be a separate step or part of the generation)
+            // Keeping a small delay for UI feedback if needed, or remove.
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            setStatus('GENERATION');
 
-        // 2. Generate (Mock delay)
-        await new Promise(resolve => setTimeout(resolve, 2500));
+            // 2. Call API
+            const result = await generateResumePDF(profile, jobDescription);
 
-        // 3. Success
-        setStatus('SUCCESS');
-        setCurrentScore(88); // Mock score
-        setAddedKeywords(['React Optimization', 'Micro-frontends', 'System Design', 'CI/CD Pipelines']); // Mock keywords
+            // 3. Handle PDF Download
+            const url = window.URL.createObjectURL(result.blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', result.filename);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+            window.URL.revokeObjectURL(url);
 
-        // Add to history
-        const newLog: ResumeLog = {
-            id: Date.now().toString(),
-            generatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            company: 'Target Company', // Ideally extracted from JD
-            role: profile === 'frontend' ? 'Frontend Engineer' : 'Fullstack Developer',
-            status: ApplicationStatus.Success,
-            matchScore: 88,
-        };
+            // 4. Success
+            setStatus('SUCCESS');
+            setCurrentScore(88); // Mock score as API returns PDF only
+            setAddedKeywords(['Optimized based on JD']); // Mock keywords
 
-        setHistory(prev => [newLog, ...prev]);
+            // Determine readable role name
+            const roleLabel = JOB_ROLE_OPTIONS.find(p => p.value === profile)?.label || profile;
+
+            // Add to history
+            const newLog: ResumeLog = {
+                id: Date.now().toString(),
+                generatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                company: '', // Ideally we'd extract this from the JD
+                role: roleLabel, // Use label if found
+                status: ResumeStatus.SUCCESS,
+                matchScore: 88,
+                tokenUsage: result?.tokenUsage,
+            };
+
+            setHistory(prev => [newLog, ...prev]);
+            console.log('Token Usage:', result.tokenUsage);
+
+        } catch (error) {
+            console.error('Generation failed:', error);
+            setStatus('FAILED');
+        }
     };
 
     const handleViewResume = (log: ResumeLog) => {
+        debugger;
         setSelectedResume(log);
         setIsDrawerOpen(true);
     };

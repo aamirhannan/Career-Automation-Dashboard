@@ -3,7 +3,7 @@ import SectionTitle from '@/components/ui/SectionTitle';
 import StatusBadge from '@/components/table/StatusBadge';
 import { Button, IconButton, Tooltip } from '@mui/material';
 import { Download, Eye, FileText, MoreHorizontal } from 'lucide-react';
-import { ApplicationStatus } from '@/lib/types';
+import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 
 // Using a local interface for now, or could export from types.ts if we update it
 export interface ResumeLog {
@@ -11,8 +11,14 @@ export interface ResumeLog {
     generatedAt: string;
     company: string;
     role: string;
-    status: ApplicationStatus;
+    status: ResumeStatus;
     matchScore?: number;
+    newResumeContent?: string;
+    tokenUsage?: {
+        cost: string;
+        input: string;
+        output: string;
+    };
 }
 
 interface ResumeHistoryTableProps {
