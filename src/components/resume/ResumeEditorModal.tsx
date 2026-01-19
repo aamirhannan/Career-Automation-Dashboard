@@ -4,15 +4,18 @@ import { useState, useEffect } from 'react';
 import {
     Dialog, Slide, Button, TextField,
     Accordion, AccordionSummary, AccordionDetails,
-    IconButton, Divider, InputAdornment
+    IconButton, Divider, InputAdornment,
+    Tabs, Tab, Box
 } from '@mui/material';
 import {
-    X, Save, FileText, ChevronDown, Plus, Trash2,
-    Briefcase, User, MapPin, Mail, Phone
+    Save, FileText, ChevronDown, Plus, Trash2,
+    Briefcase, User, MapPin, Mail, Phone,
+    GraduationCap, Code, FolderGit2
 } from 'lucide-react';
 import { TransitionProps } from '@mui/material/transitions';
 import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import ResumeRender, { ResumeData } from './ResumeRender';
 
 // Transition for full screen dialog
 const Transition = React.forwardRef(function Transition(
@@ -59,98 +62,204 @@ const darkTheme = createTheme({
 interface ResumeEditorModalProps {
     open: boolean;
     onClose: () => void;
-    initialData: any;
-    onSave: (newData: any) => void;
+    initialData: ResumeData;
+    onSave: (newData: ResumeData) => void;
+}
+
+interface TabPanelProps {
+    children?: React.ReactNode;
+    index: number;
+    value: number;
+}
+
+function CustomTabPanel(props: TabPanelProps) {
+    const { children, value, index, ...other } = props;
+    return (
+        <div
+            role="tabpanel"
+            hidden={value !== index}
+            id={`simple-tabpanel-${index}`}
+            {...other}
+            style={{ padding: '24px 0' }}
+        >
+            {value === index && children}
+        </div>
+    );
 }
 
 export default function ResumeEditorModal({ open, onClose, initialData, onSave }: ResumeEditorModalProps) {
-    const [formData, setFormData] = useState<any>(initialData || {});
+    const [formData, setFormData] = useState<ResumeData>(initialData || { header: { contact: {} } });
+    const [activeTab, setActiveTab] = useState(0);
 
-    // Sync state when initialData changes
     useEffect(() => {
         if (initialData) {
             setFormData(initialData);
         }
     }, [initialData, open]);
 
-    const handleChange = (field: string, value: string) => {
-        setFormData((prev: any) => ({ ...prev, [field]: value }));
+    const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+        setActiveTab(newValue);
     };
 
-    const handleExperienceChange = (index: number, field: string, value: string | string[]) => {
+    // --- Handlers for Header ---
+    const handleHeaderChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            header: { ...prev.header, [field]: value }
+        }));
+    };
+
+    const handleContactChange = (field: string, value: string) => {
+        setFormData(prev => ({
+            ...prev,
+            header: {
+                ...prev.header,
+                contact: { ...prev.header.contact, [field]: value }
+            }
+        }));
+    };
+
+    // --- Handlers for Experience ---
+    const handleExperienceChange = (index: number, field: string, value: string | object) => {
         const newExp = [...(formData.experience || [])];
         newExp[index] = { ...newExp[index], [field]: value };
-        setFormData((prev: any) => ({ ...prev, experience: newExp }));
+        setFormData(prev => ({ ...prev, experience: newExp }));
     };
 
-    const handlePointChange = (expIndex: number, pointIndex: number, value: string) => {
+    const handleExpDurationChange = (index: number, subField: 'start' | 'end', value: string) => {
         const newExp = [...(formData.experience || [])];
-        const newPoints = [...(newExp[expIndex].points || [])];
+        const duration = { ...newExp[index].duration, [subField]: value };
+        newExp[index] = { ...newExp[index], duration };
+        setFormData(prev => ({ ...prev, experience: newExp }));
+    };
+
+    const handleExpPointChange = (expIndex: number, pointIndex: number, value: string) => {
+        const newExp = [...(formData.experience || [])];
+        const newPoints = [...(newExp[expIndex].responsibilitiesAndAchievements || [])];
         newPoints[pointIndex] = value;
-        newExp[expIndex].points = newPoints;
-        setFormData((prev: any) => ({ ...prev, experience: newExp }));
+        newExp[expIndex] = { ...newExp[expIndex], responsibilitiesAndAchievements: newPoints };
+        setFormData(prev => ({ ...prev, experience: newExp }));
     };
 
-    const addPoint = (expIndex: number) => {
+    const addExpPoint = (expIndex: number) => {
         const newExp = [...(formData.experience || [])];
-        const newPoints = [...(newExp[expIndex].points || []), ""];
-        newExp[expIndex].points = newPoints;
-        setFormData((prev: any) => ({ ...prev, experience: newExp }));
+        const newPoints = [...(newExp[expIndex].responsibilitiesAndAchievements || []), ""];
+        newExp[expIndex] = { ...newExp[expIndex], responsibilitiesAndAchievements: newPoints };
+        setFormData(prev => ({ ...prev, experience: newExp }));
     };
 
-    const removePoint = (expIndex: number, pointIndex: number) => {
+    const removeExpPoint = (expIndex: number, pointIndex: number) => {
         const newExp = [...(formData.experience || [])];
-        newExp[expIndex].points = newExp[expIndex].points.filter((_: any, i: number) => i !== pointIndex);
-        setFormData((prev: any) => ({ ...prev, experience: newExp }));
+        const newPoints = newExp[expIndex].responsibilitiesAndAchievements?.filter((_, i) => i !== pointIndex);
+        newExp[expIndex] = { ...newExp[expIndex], responsibilitiesAndAchievements: newPoints };
+        setFormData(prev => ({ ...prev, experience: newExp }));
     };
 
     const addExperience = () => {
-        setFormData((prev: any) => ({
+        setFormData(prev => ({
             ...prev,
             experience: [
                 ...(prev.experience || []),
-                { role: "New Role", company: "Company", period: "2024", points: [""] }
+                {
+                    role: "New Role",
+                    company: "Company Name",
+                    duration: { start: "", end: "" },
+                    responsibilitiesAndAchievements: [""]
+                }
             ]
         }));
     };
 
     const removeExperience = (index: number) => {
-        const newExp = formData.experience.filter((_: any, i: number) => i !== index);
-        setFormData((prev: any) => ({ ...prev, experience: newExp }));
+        const newExp = formData.experience?.filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, experience: newExp }));
     };
 
-    const renderPreview = () => {
-        const data = formData;
-        return (
-            <div className="bg-white text-black h-full shadow-xl p-8 overflow-y-auto text-[0.8rem]">
-                <div className="text-center border-b-2 border-gray-800 pb-4 mb-4">
-                    <h1 className="text-2xl font-bold uppercase tracking-widest text-[#2d3748]">{data.name || 'Your Name'}</h1>
-                    <p className="text-xs text-gray-600 mt-1">{data.email} | {data.phone} | {data.location}</p>
-                </div>
-
-                <div className="mb-4">
-                    <h2 className="text-sm font-bold uppercase border-b border-gray-300 mb-2 text-[#2d3748]">Summary</h2>
-                    <p className="text-xs leading-relaxed text-gray-700">{data.summary}</p>
-                </div>
-
-                <div className="mb-4">
-                    <h2 className="text-sm font-bold uppercase border-b border-gray-300 mb-2 text-[#2d3748]">Experience</h2>
-                    {data.experience?.map((exp: any, i: number) => (
-                        <div key={i} className="mb-2">
-                            <div className="flex justify-between items-baseline">
-                                <h3 className="font-bold text-gray-800">{exp.role}</h3>
-                                <span className="text-xs text-gray-600">{exp.period}</span>
-                            </div>
-                            <p className="text-xs italic text-gray-600 mb-1">{exp.company}</p>
-                            <ul className="list-disc pl-4 text-xs space-y-0.5 text-gray-700">
-                                {exp.points?.map((pt: string, j: number) => <li key={j}>{pt}</li>)}
-                            </ul>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        );
+    // --- Handlers for Skills ---
+    // Skills are Record<string, string[] | string>. We'll simplify editing by assuming categories are keys
+    const handleSkillCategoryChange = (oldCategory: string, newCategory: string) => {
+        if (oldCategory === newCategory) return;
+        const skills = { ...formData.technicalSkills };
+        const content = skills[oldCategory];
+        delete skills[oldCategory];
+        skills[newCategory] = content;
+        setFormData(prev => ({ ...prev, technicalSkills: skills }));
     };
+
+    const handleSkillContentChange = (category: string, value: string) => {
+        // We'll treat the input as comma separated string for easier editing
+        const arrayValue = value.split(',').map(s => s.trim());
+        setFormData(prev => ({
+            ...prev,
+            technicalSkills: {
+                ...prev.technicalSkills,
+                [category]: arrayValue
+            }
+        }));
+    };
+
+    const addSkillCategory = () => {
+        setFormData(prev => ({
+            ...prev,
+            technicalSkills: {
+                ...prev.technicalSkills,
+                "New Category": []
+            }
+        }));
+    };
+
+    const removeSkillCategory = (category: string) => {
+        const skills = { ...formData.technicalSkills };
+        delete skills[category];
+        setFormData(prev => ({ ...prev, technicalSkills: skills }));
+    };
+
+    // --- Handlers for Projects ---
+    // Similar pattern to Experience
+    const handleProjectChange = (index: number, field: string, value: string) => {
+        const newProjects = [...(formData.projects || [])];
+        // @ts-ignore
+        newProjects[index] = { ...newProjects[index], [field]: value };
+        setFormData(prev => ({ ...prev, projects: newProjects }));
+    };
+
+    const handleProjectPointChange = (projIndex: number, pointIndex: number, value: string) => {
+        const newProjs = [...(formData.projects || [])];
+        const newPoints = [...(newProjs[projIndex].description || [])];
+        newPoints[pointIndex] = value;
+        newProjs[projIndex] = { ...newProjs[projIndex], description: newPoints };
+        setFormData(prev => ({ ...prev, projects: newProjs }));
+    };
+
+    const addProjectPoint = (projIndex: number) => {
+        const newProjs = [...(formData.projects || [])];
+        const newPoints = [...(newProjs[projIndex].description || []), ""];
+        newProjs[projIndex] = { ...newProjs[projIndex], description: newPoints };
+        setFormData(prev => ({ ...prev, projects: newProjs }));
+    };
+
+    const removeProjectPoint = (projIndex: number, pointIndex: number) => {
+        const newProjs = [...(formData.projects || [])];
+        const newPoints = newProjs[projIndex].description?.filter((_, i) => i !== pointIndex);
+        newProjs[projIndex] = { ...newProjs[projIndex], description: newPoints };
+        setFormData(prev => ({ ...prev, projects: newProjs }));
+    };
+
+    const addProject = () => {
+        setFormData(prev => ({
+            ...prev,
+            projects: [
+                ...(prev.projects || []),
+                { title: "New Project", description: [""] }
+            ]
+        }));
+    };
+
+    const removeProject = (index: number) => {
+        const newProjs = formData.projects?.filter((_, i) => i !== index);
+        setFormData(prev => ({ ...prev, projects: newProjs }));
+    };
+
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -163,16 +272,14 @@ export default function ResumeEditorModal({ open, onClose, initialData, onSave }
             >
                 <div className="h-full flex flex-col">
                     {/* Toolbar */}
-                    <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#1a1c23]">
+                    <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-[#1a1c23] shrink-0">
                         <div className="flex items-center gap-3">
                             <FileText className="text-primary" size={24} />
                             <div>
                                 <h2 className="text-white font-bold text-lg">Resume Editor</h2>
-                                <span className="text-xs text-gray-400">Update your details securely</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <div className="h-6 w-[1px] bg-white/10"></div>
                             <Button onClick={onClose} sx={{ color: 'gray', '&:hover': { color: 'white' } }}>
                                 Cancel
                             </Button>
@@ -191,79 +298,67 @@ export default function ResumeEditorModal({ open, onClose, initialData, onSave }
                     <div className="flex-1 flex overflow-hidden">
                         {/* Left: Form Editor */}
                         <div className="w-1/2 border-r border-white/10 flex flex-col bg-[#0d0e12] overflow-y-auto">
-                            <div className="p-8 space-y-8 max-w-3xl mx-auto w-full">
+                            <div className="p-6">
+                                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                    <Tabs value={activeTab} onChange={handleTabChange} aria-label="resume sections" variant="scrollable" scrollButtons="auto">
+                                        <Tab icon={<User size={16} />} iconPosition="start" label="Personal" />
+                                        <Tab icon={<Briefcase size={16} />} iconPosition="start" label="Experience" />
+                                        <Tab icon={<Code size={16} />} iconPosition="start" label="Skills" />
+                                        <Tab icon={<FolderGit2 size={16} />} iconPosition="start" label="Projects" />
+                                        <Tab icon={<GraduationCap size={16} />} iconPosition="start" label="Education" />
+                                    </Tabs>
+                                </Box>
 
-                                {/* Personal Details Section */}
-                                <section className="space-y-4">
-                                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                        <User size={16} /> Personal Details
-                                    </h3>
-                                    <div className="grid grid-cols-2 gap-4">
+                                {/* Personal Tab */}
+                                <CustomTabPanel value={activeTab} index={0}>
+                                    <div className="space-y-4 max-w-3xl mx-auto">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <TextField
+                                                label="Full Name"
+                                                fullWidth
+                                                value={formData.header?.fullName || ''}
+                                                onChange={(e) => handleHeaderChange('fullName', e.target.value)}
+                                            />
+                                            <TextField
+                                                label="Email"
+                                                fullWidth
+                                                value={formData.header?.contact?.email || ''}
+                                                onChange={(e) => handleContactChange('email', e.target.value)}
+                                                InputProps={{ startAdornment: <InputAdornment position="start"><Mail size={16} /></InputAdornment> }}
+                                            />
+                                            <TextField
+                                                label="Phone"
+                                                fullWidth
+                                                value={formData.header?.contact?.phone || ''}
+                                                onChange={(e) => handleContactChange('phone', e.target.value)}
+                                                InputProps={{ startAdornment: <InputAdornment position="start"><Phone size={16} /></InputAdornment> }}
+                                            />
+                                            <TextField
+                                                label="Location"
+                                                fullWidth
+                                                value={formData.header?.contact?.location || ''}
+                                                onChange={(e) => handleContactChange('location', e.target.value)}
+                                                InputProps={{ startAdornment: <InputAdornment position="start"><MapPin size={16} /></InputAdornment> }}
+                                            />
+                                        </div>
                                         <TextField
-                                            label="Full Name"
+                                            label="Professional Summary"
                                             fullWidth
-                                            value={formData.name || ''}
-                                            onChange={(e) => handleChange('name', e.target.value)}
-                                        />
-                                        <TextField
-                                            label="Email"
-                                            fullWidth
-                                            value={formData.email || ''}
-                                            onChange={(e) => handleChange('email', e.target.value)}
-                                            InputProps={{
-                                                startAdornment: <InputAdornment position="start"><Mail size={16} className="text-gray-500" /></InputAdornment>,
-                                            }}
-                                        />
-                                        <TextField
-                                            label="Phone"
-                                            fullWidth
-                                            value={formData.phone || ''}
-                                            onChange={(e) => handleChange('phone', e.target.value)}
-                                            InputProps={{
-                                                startAdornment: <InputAdornment position="start"><Phone size={16} className="text-gray-500" /></InputAdornment>,
-                                            }}
-                                        />
-                                        <TextField
-                                            label="Location"
-                                            fullWidth
-                                            value={formData.location || ''}
-                                            onChange={(e) => handleChange('location', e.target.value)}
-                                            InputProps={{
-                                                startAdornment: <InputAdornment position="start"><MapPin size={16} className="text-gray-500" /></InputAdornment>,
-                                            }}
+                                            multiline
+                                            rows={6}
+                                            value={formData.professionalSummary || ''}
+                                            onChange={(e) => setFormData(p => ({ ...p, professionalSummary: e.target.value }))}
                                         />
                                     </div>
-                                    <TextField
-                                        label="Professional Summary"
-                                        fullWidth
-                                        multiline
-                                        rows={4}
-                                        value={formData.summary || ''}
-                                        onChange={(e) => handleChange('summary', e.target.value)}
-                                        placeholder="Brief overview of your professional background..."
-                                    />
-                                </section>
+                                </CustomTabPanel>
 
-                                <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-
-                                {/* Experience Section */}
-                                <section className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                            <Briefcase size={16} /> Experience
-                                        </h3>
-                                        <Button
-                                            size="small"
-                                            startIcon={<Plus size={16} />}
-                                            onClick={addExperience}
-                                            sx={{ color: '#ae7aff' }}
-                                        >
-                                            Add Role
+                                {/* Experience Tab */}
+                                <CustomTabPanel value={activeTab} index={1}>
+                                    <div className="space-y-4 max-w-3xl mx-auto">
+                                        <Button startIcon={<Plus size={16} />} onClick={addExperience} fullWidth variant="outlined" sx={{ mb: 2, borderStyle: 'dashed' }}>
+                                            Add Experience
                                         </Button>
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        {formData.experience?.map((exp: any, index: number) => (
+                                        {formData.experience?.map((exp, index) => (
                                             <Accordion key={index} defaultExpanded={index === 0}>
                                                 <AccordionSummary expandIcon={<ChevronDown className="text-gray-400" />}>
                                                     <div className="flex items-center justify-between w-full pr-4">
@@ -273,79 +368,133 @@ export default function ResumeEditorModal({ open, onClose, initialData, onSave }
                                                 </AccordionSummary>
                                                 <AccordionDetails className="space-y-4 pt-0">
                                                     <div className="grid grid-cols-2 gap-4">
-                                                        <TextField
-                                                            label="Job Title"
-                                                            size="small"
-                                                            value={exp.role || ''}
-                                                            onChange={(e) => handleExperienceChange(index, 'role', e.target.value)}
-                                                        />
-                                                        <TextField
-                                                            label="Company"
-                                                            size="small"
-                                                            value={exp.company || ''}
-                                                            onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
-                                                        />
-                                                        <TextField
-                                                            label="Period"
-                                                            size="small"
-                                                            value={exp.period || ''}
-                                                            onChange={(e) => handleExperienceChange(index, 'period', e.target.value)}
-                                                            className="col-span-2"
-                                                        />
+                                                        <TextField label="Role" size="small" value={exp.role || ''} onChange={(e) => handleExperienceChange(index, 'role', e.target.value)} />
+                                                        <TextField label="Company" size="small" value={exp.company || ''} onChange={(e) => handleExperienceChange(index, 'company', e.target.value)} />
+                                                        <TextField label="Start Date" size="small" value={exp.duration?.start || ''} onChange={(e) => handleExpDurationChange(index, 'start', e.target.value)} />
+                                                        <TextField label="End Date" size="small" value={exp.duration?.end || ''} onChange={(e) => handleExpDurationChange(index, 'end', e.target.value)} />
                                                     </div>
-
                                                     <div className="space-y-2">
-                                                        <label className="text-xs text-gray-500 uppercase font-semibold">Achievements / Responsibilities</label>
-                                                        {exp.points?.map((point: string, pIndex: number) => (
+                                                        <label className="text-xs text-gray-500 uppercase font-semibold">Responsibilities</label>
+                                                        {exp.responsibilitiesAndAchievements?.map((point, pIndex) => (
                                                             <div key={pIndex} className="flex gap-2">
-                                                                <TextField
-                                                                    fullWidth
-                                                                    size="small"
-                                                                    multiline
-                                                                    value={point}
-                                                                    onChange={(e) => handlePointChange(index, pIndex, e.target.value)}
-                                                                />
-                                                                <IconButton
-                                                                    size="small"
-                                                                    onClick={() => removePoint(index, pIndex)}
-                                                                    sx={{ color: '#ef4444', opacity: 0.5, '&:hover': { opacity: 1 } }}
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                </IconButton>
+                                                                <TextField fullWidth size="small" multiline value={point} onChange={(e) => handleExpPointChange(index, pIndex, e.target.value)} />
+                                                                <IconButton size="small" onClick={() => removeExpPoint(index, pIndex)} sx={{ color: '#ef4444' }}><Trash2 size={16} /></IconButton>
                                                             </div>
                                                         ))}
-                                                        <Button
-                                                            size="small"
-                                                            startIcon={<Plus size={14} />}
-                                                            onClick={() => addPoint(index)}
-                                                            sx={{ color: 'gray' }}
-                                                        >
-                                                            Add Point
-                                                        </Button>
+                                                        <Button size="small" startIcon={<Plus size={14} />} onClick={() => addExpPoint(index)}>Add Point</Button>
                                                     </div>
-
-                                                    <div className="pt-2 flex justify-end">
-                                                        <Button
-                                                            size="small"
-                                                            color="error"
-                                                            startIcon={<Trash2 size={16} />}
-                                                            onClick={() => removeExperience(index)}
-                                                        >
-                                                            Remove Role
-                                                        </Button>
+                                                    <div className="flex justify-end pt-2">
+                                                        <Button size="small" color="error" startIcon={<Trash2 size={16} />} onClick={() => removeExperience(index)}>Delete Role</Button>
                                                     </div>
                                                 </AccordionDetails>
                                             </Accordion>
                                         ))}
                                     </div>
-                                </section>
+                                </CustomTabPanel>
+
+                                {/* Skills Tab */}
+                                <CustomTabPanel value={activeTab} index={2}>
+                                    <div className="space-y-4 max-w-3xl mx-auto">
+                                        <Button startIcon={<Plus size={16} />} onClick={addSkillCategory} fullWidth variant="outlined" sx={{ mb: 2, borderStyle: 'dashed' }}>
+                                            Add Skill Category
+                                        </Button>
+                                        {formData.technicalSkills && Object.entries(formData.technicalSkills).map(([category, skills], index) => (
+                                            <div key={index} className="bg-white/5 p-4 rounded-lg space-y-3 border border-white/10">
+                                                <div className="flex justify-between items-center gap-4">
+                                                    <TextField
+                                                        label="Category Name"
+                                                        size="small"
+                                                        value={category}
+                                                        onChange={(e) => handleSkillCategoryChange(category, e.target.value)}
+                                                        sx={{ flex: 1 }}
+                                                    />
+                                                    <IconButton size="small" color="error" onClick={() => removeSkillCategory(category)}><Trash2 size={16} /></IconButton>
+                                                </div>
+                                                <TextField
+                                                    label="Skills (comma separated)"
+                                                    fullWidth
+                                                    multiline
+                                                    rows={2}
+                                                    value={Array.isArray(skills) ? skills.join(', ') : skills}
+                                                    onChange={(e) => handleSkillContentChange(category, e.target.value)}
+                                                    helperText="Example: React, Node.js, TypeScript"
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CustomTabPanel>
+
+                                {/* Projects Tab */}
+                                <CustomTabPanel value={activeTab} index={3}>
+                                    <div className="space-y-4 max-w-3xl mx-auto">
+                                        <Button startIcon={<Plus size={16} />} onClick={addProject} fullWidth variant="outlined" sx={{ mb: 2, borderStyle: 'dashed' }}>
+                                            Add Project
+                                        </Button>
+                                        {formData.projects?.map((proj, index) => (
+                                            <Accordion key={index} defaultExpanded={index === 0}>
+                                                <AccordionSummary expandIcon={<ChevronDown className="text-gray-400" />}>
+                                                    <div className="flex items-center justify-between w-full pr-4">
+                                                        <span className="font-medium text-white">{proj.title || 'New Project'}</span>
+                                                    </div>
+                                                </AccordionSummary>
+                                                <AccordionDetails className="space-y-4 pt-0">
+                                                    <TextField label="Project Title" fullWidth size="small" value={proj.title || ''} onChange={(e) => handleProjectChange(index, 'title', e.target.value)} />
+
+                                                    <div className="space-y-2">
+                                                        <label className="text-xs text-gray-500 uppercase font-semibold">Description</label>
+                                                        {proj.description?.map((point, pIndex) => (
+                                                            <div key={pIndex} className="flex gap-2">
+                                                                <TextField fullWidth size="small" multiline value={point} onChange={(e) => handleProjectPointChange(index, pIndex, e.target.value)} />
+                                                                <IconButton size="small" onClick={() => removeProjectPoint(index, pIndex)} sx={{ color: '#ef4444' }}><Trash2 size={16} /></IconButton>
+                                                            </div>
+                                                        ))}
+                                                        <Button size="small" startIcon={<Plus size={14} />} onClick={() => addProjectPoint(index)}>Add Description Point</Button>
+                                                    </div>
+                                                    <div className="flex justify-end pt-2">
+                                                        <Button size="small" color="error" startIcon={<Trash2 size={16} />} onClick={() => removeProject(index)}>Delete Project</Button>
+                                                    </div>
+                                                </AccordionDetails>
+                                            </Accordion>
+                                        ))}
+                                    </div>
+                                </CustomTabPanel>
+
+                                {/* Education Tab */}
+                                <CustomTabPanel value={activeTab} index={4}>
+                                    <div className="space-y-4 max-w-3xl mx-auto bg-white/5 p-6 rounded-lg border border-white/10">
+                                        <TextField
+                                            label="Degree"
+                                            fullWidth
+                                            value={formData.education?.degree || ''}
+                                            onChange={(e) => setFormData(p => ({ ...p, education: { ...p.education!, degree: e.target.value } }))}
+                                        />
+                                        <TextField
+                                            label="Institution"
+                                            fullWidth
+                                            value={formData.education?.institution || ''}
+                                            onChange={(e) => setFormData(p => ({ ...p, education: { ...p.education!, institution: e.target.value } }))}
+                                        />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <TextField
+                                                label="Start Date"
+                                                value={formData.education?.duration?.start || ''}
+                                                onChange={(e) => setFormData(p => ({ ...p, education: { ...p.education!, duration: { ...p.education!.duration, start: e.target.value } } }))}
+                                            />
+                                            <TextField
+                                                label="End Date"
+                                                value={formData.education?.duration?.end || ''}
+                                                onChange={(e) => setFormData(p => ({ ...p, education: { ...p.education!, duration: { ...p.education!.duration, end: e.target.value } } }))}
+                                            />
+                                        </div>
+                                    </div>
+                                </CustomTabPanel>
                             </div>
                         </div>
 
                         {/* Right: Live Preview */}
                         <div className="w-1/2 bg-[#525659] p-8 overflow-hidden flex items-center justify-center">
-                            <div className="h-full aspect-[1/1.414] shadow-2xl scale-[0.85] origin-top">
-                                {renderPreview()}
+                            <div className="h-full w-full max-w-[21cm] overflow-y-auto shadow-2xl origin-top bg-white">
+                                <ResumeRender data={formData} />
                             </div>
                         </div>
                     </div>

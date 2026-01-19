@@ -39,7 +39,7 @@ export const generateResumePDF = async (profile: string, jobDescription: string)
                 output: response.headers['x-token-output'] || '0'
             }
         };
-    } catch (error) {
+        } catch (error) {
         console.error('Error generating resume:', error);
         throw error;
     }
@@ -51,6 +51,42 @@ export const getResumes = async (): Promise<any[]> => {
         return response.data;
     } catch (error) {
         console.error('Error fetching resumes:', error);
+        throw error;
+    }
+};
+
+export const downloadResumePDF = async (newResumeContent: any, role: string): Promise<void> => {
+    try {
+        const response = await axios.post('/resume-generation/download-resume-pdf', {
+            newResumeContent: typeof newResumeContent === 'string' ? JSON.parse(newResumeContent) : newResumeContent,
+            role: role
+        }, {
+            responseType: 'blob'
+        });
+
+        // Create a link element, hide it, direct it towards the blob, and then 'click' it intentionally.
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        
+        // Extract filename from Content-Disposition header if available
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = 'Detailed_Resume.pdf';
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+        
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error('Error downloading resume PDF:', error);
         throw error;
     }
 };

@@ -5,10 +5,11 @@ import ResumeControlPanel from '@/components/resume/ResumeControlPanel';
 import ResumePreviewPanel from '@/components/resume/ResumePreviewPanel';
 import ResumeHistoryTable, { ResumeLog } from '@/components/resume/ResumeHistoryTable';
 import ResumeEditorModal from '@/components/resume/ResumeEditorModal';
+import ResumeRender, { ResumeData } from '@/components/resume/ResumeRender';
 import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 import { Drawer, IconButton, Divider, Button } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
-import { generateResumePDF, getResumes } from '@/services/resumeService';
+import { generateResumePDF, getResumes, downloadResumePDF } from '@/services/resumeService';
 import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
 // const MOCK_HISTORY: ResumeLog[] = [
@@ -31,18 +32,27 @@ import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 // ];
 
 // Mock data content for the editor
+// Mock data content for the editor matched to ResumeData structure
 const MOCK_RESUME_CONTENT = {
-    name: "Alex Roberts",
-    email: "alex.roberts@example.com",
-    phone: "(555) 123-4567",
-    location: "San Francisco, CA",
-    summary: "Highly skilled Frontend Engineer with 5+ years of experience building scalable web applications. Proven track record in optimizing performance and delivering high-quality user experiences. Tailored specifically for Target Company, with a focus on modern stack technologies.",
+    header: {
+        fullName: "Alex Roberts",
+        contact: {
+            email: "alex.roberts@example.com",
+            phone: "(555) 123-4567",
+            location: "San Francisco, CA",
+            links: {
+                linkedin: "linkedin.com/in/alexr",
+                github: "github.com/alexr"
+            }
+        }
+    },
+    professionalSummary: "Highly skilled Frontend Engineer with 5+ years of experience building scalable web applications. Proven track record in optimizing performance and delivering high-quality user experiences. Tailored specifically for Target Company, with a focus on modern stack technologies.",
     experience: [
         {
             role: "Senior Software Engineer",
             company: "TechCorp Inc.",
-            period: "2021 - Present",
-            points: [
+            duration: { start: "2021", end: "Present" },
+            responsibilitiesAndAchievements: [
                 "Led the migration of legacy monolith to microservices, reducing deployment time by 40%.",
                 "Mentored generic junior developers and established code review standards.",
                 "Implemented real-time features using WebSockets, increasing user engagement by 25%."
@@ -51,13 +61,23 @@ const MOCK_RESUME_CONTENT = {
         {
             role: "Software Developer",
             company: "Startup X",
-            period: "2018 - 2021",
-            points: [
+            duration: { start: "2018", end: "2021" },
+            responsibilitiesAndAchievements: [
                 "Built the MVP for the core product using React and Firebase.",
                 "Collaborated with designers to implement pixel-perfect UIs."
             ]
         }
-    ]
+    ],
+    technicalSkills: {
+        "Languages": ["JavaScript", "TypeScript", "Python"],
+        "Frameworks": ["React", "Next.js", "Express"]
+    },
+    education: {
+        degree: "B.S. Computer Science",
+        institution: "University of Technology",
+        duration: { start: "2014", end: "2018" }
+    },
+    projects: []
 };
 
 export default function ResumeBuilderPage() {
@@ -148,24 +168,39 @@ export default function ResumeBuilderPage() {
     };
 
     const handleViewResume = (log: ResumeLog) => {
-        debugger;
         setSelectedResume(log);
         setIsDrawerOpen(true);
     };
 
-    const handleDownloadResume = (log: ResumeLog) => {
-        console.log(`Downloading resume for ${log.company}`);
-        // Simulate download
-        const link = document.createElement('a');
-        link.href = '#'; // In real app, this would be a blob URL
-        link.download = `Resume_${log.company}_${log.role}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownloadResume = async (log: ResumeLog) => {
+        if (!log.newResumeContent) {
+            console.error("No content to download for this resume");
+            return;
+        }
+
+        try {
+            await downloadResumePDF(log.newResumeContent, log.role);
+            console.log(`Downloaded resume for ${log.company}`);
+        } catch (error) {
+            console.error("Failed to download resume PDF", error);
+            // Optionally add a toast or alert here
+        }
     };
 
     const handleEditResume = () => {
-        // In a real app, we'd fetch the resume content here
+        if (selectedResume && selectedResume.newResumeContent) {
+            try {
+                const content = typeof selectedResume.newResumeContent === 'string'
+                    ? JSON.parse(selectedResume.newResumeContent)
+                    : selectedResume.newResumeContent;
+                setEditorData(content);
+            } catch (e) {
+                console.error("Failed to parse resume content", e);
+                setEditorData(MOCK_RESUME_CONTENT);
+            }
+        } else {
+            setEditorData(MOCK_RESUME_CONTENT);
+        }
         setIsEditorOpen(true);
     };
 
@@ -282,82 +317,20 @@ export default function ResumeBuilderPage() {
                         <div className="bg-white text-black max-w-[21cm] mx-auto min-h-[29.7cm] shadow-2xl p-12">
                             {/* Mock PDF Content */}
                             {selectedResume ? (
-                                <div className="space-y-6">
-                                    <div className="text-center border-b-2 border-gray-800 pb-6">
-                                        <h1 className="text-4xl font-bold uppercase tracking-widest text-[#2d3748]">Alex Roberts</h1>
-                                        <p className="text-sm text-gray-600 mt-2">alex.roberts@example.com | (555) 123-4567 | San Francisco, CA</p>
-                                        <p className="text-sm text-blue-600 mt-1">linkedin.com/in/alexr | github.com/alexr</p>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Professional Summary</h2>
-                                        <p className="text-sm leading-relaxed text-gray-700">
-                                            Highly skilled <strong>{selectedResume.role}</strong> with 5+ years of experience building scalable web applications.
-                                            Proven track record in optimizing performance and delivering high-quality user experiences.
-                                            Tailored specifically for <strong>{selectedResume.company}</strong>, with a focus on modern stack technologies.
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Key Skills</h2>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li>JavaScript (ES6+), TypeScript, React, Next.js</li>
-                                                <li>Node.js, Express, PostgreSQL, MongoDB</li>
-                                            </ul>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li>AWS, Docker, CI/CD Pipelines</li>
-                                                <li>System Design, Performance Optimization</li>
-                                            </ul>
+                                <div className="min-h-full">
+                                    {selectedResume.newResumeContent ? (
+                                        <ResumeRender
+                                            data={
+                                                typeof selectedResume.newResumeContent === 'string'
+                                                    ? JSON.parse(selectedResume.newResumeContent)
+                                                    : selectedResume.newResumeContent as unknown as ResumeData
+                                            }
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                                            <p>No resume content available for this entry.</p>
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Experience</h2>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <div className="flex justify-between items-baseline">
-                                                    <h3 className="font-bold text-gray-800">Senior Software Engineer</h3>
-                                                    <span className="text-sm text-gray-600">2021 - Present</span>
-                                                </div>
-                                                <p className="text-sm italic text-gray-600 mb-1">TechCorp Inc.</p>
-                                                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                                                    <li>Led the migration of legacy monolith to microservices, reducing deployment time by 40%.</li>
-                                                    <li>Mentored generic junior developers and established code review standards.</li>
-                                                    <li>Implemented real-time features using WebSockets, increasing user engagement by 25%.</li>
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <div className="flex justify-between items-baseline">
-                                                    <h3 className="font-bold text-gray-800">Software Developer</h3>
-                                                    <span className="text-sm text-gray-600">2018 - 2021</span>
-                                                </div>
-                                                <p className="text-sm italic text-gray-600 mb-1">Startup X</p>
-                                                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                                                    <li>Built the MVP for the core product using React and Firebase.</li>
-                                                    <li>Collaborated with designers to implement pixel-perfect UIs.</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Education</h2>
-                                        <div>
-                                            <div className="flex justify-between items-baseline">
-                                                <h3 className="font-bold text-gray-800">B.S. Computer Science</h3>
-                                                <span className="text-sm text-gray-600">2018</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600">University of Technology</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-8 text-center">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                            <CheckCircle2 size={12} />
-                                            ATS Optimized for {selectedResume.company}
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             ) : (
                                 <p>Loading...</p>
