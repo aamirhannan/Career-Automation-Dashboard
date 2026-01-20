@@ -13,9 +13,10 @@ interface ResumePreviewPanelProps {
     onEdit?: () => void;
     resumeData?: any;
     onDownload?: () => void;
+    isDownloading?: boolean;
 }
 
-export default function ResumePreviewPanel({ status, score = 0, addedKeywords = [], onEdit, resumeData, onDownload }: ResumePreviewPanelProps) {
+export default function ResumePreviewPanel({ status, score = 0, addedKeywords = [], onEdit, resumeData, onDownload, isDownloading = false }: ResumePreviewPanelProps) {
     const isSuccess = status === 'SUCCESS';
     const isProcessing = status === 'PROCESSING' || status === 'GENERATION';
 
@@ -41,18 +42,23 @@ export default function ResumePreviewPanel({ status, score = 0, addedKeywords = 
                         </Tooltip>
                         <Button
                             variant="contained"
-                            startIcon={<Download size={16} />}
+                            startIcon={isDownloading ? <CircularProgress size={16} color="inherit" /> : <Download size={16} />}
                             size="small"
                             onClick={onDownload}
+                            disabled={isDownloading}
                             sx={{
                                 bgcolor: '#22c55e',
                                 '&:hover': { bgcolor: '#16a34a' },
+                                '&.Mui-disabled': {
+                                    bgcolor: 'rgba(34, 197, 94, 0.5)',
+                                    color: 'rgba(255, 255, 255, 0.7)'
+                                },
                                 textTransform: 'none',
                                 ml: 1,
                                 borderRadius: '8px'
                             }}
                         >
-                            Download PDF
+                            {isDownloading ? 'Downloading...' : 'Download PDF'}
                         </Button>
                     </div>
                 )}

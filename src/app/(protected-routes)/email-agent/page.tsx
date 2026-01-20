@@ -5,37 +5,45 @@ import {
     Tabs, Tab, Box, TextField, Button,
     Card, CardContent, IconButton, Chip,
     Slider, FormControlLabel, Switch, Divider,
-    Select, MenuItem, FormControl, InputLabel
+    Select, MenuItem, FormControl, InputLabel, Drawer
 } from '@mui/material';
 import {
     Send, Plus, Trash2, Edit2, CheckCircle2,
     Clock, Mail, Sparkles, Settings as SettingsIcon,
-    History as HistoryIcon, FileText, AlertCircle
+    History as HistoryIcon, FileText, AlertCircle, X
 } from 'lucide-react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ApplicationEditorModal from '@/components/email/ApplicationEditorModal';
 import { EmailService } from '@/services/emailService';
 import { useSnackbar } from '@/context/SnackbarContext';
 import { JOB_ROLE_OPTIONS, JOB_ROLE_MATCHERS } from '@/lib/constants';
+import ResumeRender from '@/components/resume/ResumeRender';
 
 // --- Types ---
-interface EmailDraft {
+interface ClientEmailDraft {
     id: string;
     role: string;
+    company?: string | null;
     targetEmail: string;
     subject: string;
     body: string;
     status: 'PENDING' | 'IN_PROGRESS' | 'WAITING' | 'SUCCESS' | 'FAILED' | 'REJECTED';
     createdAt: Date;
     resumeData: any; // Include resume data structure
+    jobDescription: string;
 }
 
 interface SentEmail {
     id: string;
     role: string;
+    company?: string | null;
     recipient: string;
     sentAt: string;
     status: 'SUCCESS' | 'REJECTED';
+    subject: string;
+    coverLetter: string;
+    jobDescription: string;
+    resumeContent: any;
 }
 
 // --- Mock Data ---
@@ -83,7 +91,7 @@ const darkTheme = createTheme({
 
 export default function EmailAgentPage() {
     const [activeTab, setActiveTab] = useState(0);
-    const [drafts, setDrafts] = useState<EmailDraft[]>([]);
+    const [drafts, setDrafts] = useState<ClientEmailDraft[]>([]);
     const [history, setHistory] = useState<SentEmail[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { showSnackbar } = useSnackbar();
@@ -96,7 +104,7 @@ export default function EmailAgentPage() {
                 const emails = await EmailService.getEmails();
                 if (!isMounted) return;
 
-                const newDrafts: EmailDraft[] = [];
+                const newDrafts: ClientEmailDraft[] = [];
                 const newHistory: SentEmail[] = [];
 
                 emails.forEach(email => {
@@ -105,21 +113,28 @@ export default function EmailAgentPage() {
                         newHistory.push({
                             id: email.id,
                             role: email.role,
+                            company: email.company,
                             recipient: email.targetEmail,
                             sentAt: new Date(email.updatedAt).toLocaleDateString(),
-                            status: email.status // 'SUCCESS' | 'REJECTED'
+                            status: email.status, // 'SUCCESS' | 'REJECTED'
+                            subject: email.emailSubject || `Application for ${email.role}`,
+                            jobDescription: email.jobDescription,
+                            coverLetter: email.coverLetter || "",
+                            resumeContent: email.resumeContent
                         });
                     } else {
                         // Drafts (Pending, Waiting, Failed, In Progress)
                         newDrafts.push({
                             id: email.id,
                             role: email.role,
+                            company: email.company,
                             targetEmail: email.targetEmail,
-                            subject: email.subjectLine || `Application for ${email.role}`,
+                            subject: email.emailSubject || `Application for ${email.role}`,
                             body: email.coverLetter || "Generating content...",
                             status: email.status as any,
                             createdAt: new Date(email.createdAt),
-                            resumeData: MOCK_RESUME_DATA // Placeholder
+                            resumeData: email.resumeContent,
+                            jobDescription: email.jobDescription
                         });
                     }
                 });
@@ -150,7 +165,12 @@ export default function EmailAgentPage() {
 
     // Editor State
     const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [editingDraft, setEditingDraft] = useState<EmailDraft | null>(null);
+    const [editingDraft, setEditingDraft] = useState<ClientEmailDraft | null>(null);
+
+    // View Drawer State
+    const [isViewDrawerOpen, setIsViewDrawerOpen] = useState(false);
+    const [selectedHistoryItem, setSelectedHistoryItem] = useState<SentEmail | null>(null);
+    const [viewDrawerTab, setViewDrawerTab] = useState(0);
 
     const handleJdChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const text = e.target.value;
@@ -184,15 +204,17 @@ export default function EmailAgentPage() {
             });
 
             // Status is PENDING initially (in queue for generation)
-            const newDraft: EmailDraft = {
+            const newDraft: ClientEmailDraft = {
                 id: response.id,
                 role: response.role,
+                company: response.company,
                 targetEmail: response.targetEmail,
-                subject: response.subjectLine || `Application for ${response.role}`,
+                subject: response.emailSubject || `Application for ${response.role}`,
                 body: response.coverLetter || "Generating content...",
                 status: 'PENDING', // PENDING means generating
                 createdAt: new Date(response.createdAt),
-                resumeData: MOCK_RESUME_DATA // Placeholder
+                resumeData: response.resumeContent, // Placeholder
+                jobDescription: jd
             };
 
             setDrafts([newDraft, ...drafts]);
@@ -220,9 +242,14 @@ export default function EmailAgentPage() {
                     setHistory([{
                         id: draft.id,
                         role: draft.role,
+                        company: draft.company,
                         recipient: draft.targetEmail,
                         sentAt: 'Just now',
-                        status: 'SUCCESS'
+                        status: 'SUCCESS',
+                        subject: draft.subject,
+                        coverLetter: draft.body,
+                        jobDescription: draft.jobDescription, // Now available on draft
+                        resumeContent: draft.resumeData
                     }, ...history]);
                     setDrafts(drafts.filter(d => d.id !== id));
                     showSnackbar('Email approved and pushed to send queue.', 'success');
@@ -243,9 +270,14 @@ export default function EmailAgentPage() {
                 setHistory([{
                     id: draft.id,
                     role: draft.role,
+                    company: draft.company,
                     recipient: draft.targetEmail,
                     sentAt: 'Rejected just now',
-                    status: 'REJECTED'
+                    status: 'REJECTED',
+                    subject: draft.subject,
+                    coverLetter: draft.body,
+                    jobDescription: draft.jobDescription, // Now available on draft
+                    resumeContent: draft.resumeData
                 }, ...history]);
                 setDrafts(drafts.filter(d => d.id !== id));
             } catch (error) {
@@ -254,7 +286,7 @@ export default function EmailAgentPage() {
         }
     };
 
-    const handleEdit = (draft: EmailDraft) => {
+    const handleEdit = (draft: ClientEmailDraft) => {
         if (draft.status !== 'WAITING') return; // Can only edit when waiting for review
         setEditingDraft(draft);
         setIsEditorOpen(true);
@@ -263,7 +295,7 @@ export default function EmailAgentPage() {
     const handleSaveDraft = (newData: any) => {
         if (!editingDraft) return;
 
-        const updatedDraft: EmailDraft = {
+        const updatedDraft: ClientEmailDraft = {
             ...editingDraft,
             subject: newData.subject,
             body: newData.body,
@@ -272,8 +304,15 @@ export default function EmailAgentPage() {
         };
 
         setDrafts(drafts.map(d => d.id === editingDraft.id ? updatedDraft : d));
+        setDrafts(drafts.map(d => d.id === editingDraft.id ? updatedDraft : d));
         setIsEditorOpen(false);
         setEditingDraft(null);
+    };
+
+    const handleViewHistory = (item: SentEmail) => {
+        setSelectedHistoryItem(item);
+        setViewDrawerTab(0);
+        setIsViewDrawerOpen(true);
     };
 
     return (
@@ -492,7 +531,7 @@ export default function EmailAgentPage() {
                         <table className="w-full text-left">
                             <thead className="bg-black/20 border-b border-white/10 text-xs uppercase text-gray-400 font-semibold tracking-wider">
                                 <tr>
-                                    <th className="p-4">Role</th>
+                                    <th className="p-4">Company / Role</th>
                                     <th className="p-4">Recipient</th>
                                     <th className="p-4">Sent At</th>
                                     <th className="p-4">Status</th>
@@ -502,7 +541,10 @@ export default function EmailAgentPage() {
                             <tbody className="divide-y divide-white/5">
                                 {history.map((item) => (
                                     <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                                        <td className="p-4 font-medium text-white">{item.role}</td>
+                                        <td className="p-4">
+                                            <div className="font-bold text-white text-base">{item.company || 'Unknown Company'}</div>
+                                            <div className="text-gray-400 text-sm mt-0.5">{item.role}</div>
+                                        </td>
                                         <td className="p-4 text-gray-400 font-mono text-sm">{item.recipient}</td>
                                         <td className="p-4 text-gray-400 text-sm">{item.sentAt}</td>
                                         <td className="p-4">
@@ -514,7 +556,7 @@ export default function EmailAgentPage() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <Button size="small" sx={{ color: 'gray' }}>View</Button>
+                                            <Button size="small" sx={{ color: 'gray' }} onClick={() => handleViewHistory(item)}>View</Button>
                                         </td>
                                     </tr>
                                 ))}
@@ -550,14 +592,16 @@ export default function EmailAgentPage() {
                                             <h4 className="font-medium text-white">Auto-Reply Tracking</h4>
                                             <p className="text-sm text-gray-400">Track opens and clicks using invisible pixels.</p>
                                         </div>
-                                        <Switch defaultChecked sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#7c3aed' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#7c3aed' } }} />
+                                        <Switch
+                                            disabled
+                                            sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#7c3aed' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: '#7c3aed' } }} />
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h4 className="font-medium text-white">Human-in-the-Loop Mode</h4>
                                             <p className="text-sm text-gray-400">Require manual approval for every email (Recommended).</p>
                                         </div>
-                                        <Switch defaultChecked disabled />
+                                        <Switch disabled />
                                     </div>
                                 </div>
                             </CardContent>
@@ -579,6 +623,112 @@ export default function EmailAgentPage() {
                     } : null}
                     onSave={handleSaveDraft}
                 />
+
+                {/* View Detail Drawer */}
+                <Drawer
+                    anchor="right"
+                    open={isViewDrawerOpen}
+                    onClose={() => setIsViewDrawerOpen(false)}
+                    PaperProps={{
+                        sx: {
+                            width: '50vw',
+                            minWidth: '500px',
+                            maxWidth: '800px',
+                            bgcolor: '#0d0e12',
+                            borderLeft: '1px solid rgba(255,255,255,0.1)',
+                            color: 'white'
+                        }
+                    }}
+                >
+                    <div className="h-full flex flex-col">
+                        {/* Drawer Header */}
+                        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#1a1c23]">
+                            <div>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <FileText className="text-primary" size={24} />
+                                    Application Details
+                                </h3>
+                                {selectedHistoryItem && (
+                                    <p className="text-sm text-gray-400 mt-1">
+                                        {selectedHistoryItem.role} • {selectedHistoryItem.recipient}
+                                    </p>
+                                )}
+                            </div>
+                            <IconButton onClick={() => setIsViewDrawerOpen(false)} sx={{ color: 'gray' }}>
+                                <X size={24} />
+                            </IconButton>
+                        </div>
+
+                        {/* Drawer Tabs */}
+                        <Box sx={{ borderBottom: 1, borderColor: 'white/10', bgcolor: '#1a1c23' }}>
+                            <Tabs value={viewDrawerTab} onChange={(_, v) => setViewDrawerTab(v)} textColor="primary" indicatorColor="primary">
+                                <Tab icon={<Mail size={16} />} iconPosition="start" label="Email Info" />
+                                <Tab icon={<FileText size={16} />} iconPosition="start" label="Resume Preview" />
+                            </Tabs>
+                        </Box>
+
+                        {/* Drawer Content */}
+                        <div className="flex-1 overflow-y-auto bg-black/50">
+                            {selectedHistoryItem && (
+                                <>
+                                    {/* Tab 0: Email Info */}
+                                    {viewDrawerTab === 0 && (
+                                        <div className="p-8 space-y-6">
+                                            <TextField
+                                                label="Target Email"
+                                                fullWidth
+                                                value={selectedHistoryItem.recipient}
+                                                InputProps={{ readOnly: true }}
+                                                variant="outlined"
+                                            />
+                                            <TextField
+                                                label="Subject"
+                                                fullWidth
+                                                value={selectedHistoryItem.subject}
+                                                InputProps={{ readOnly: true }}
+                                                variant="outlined"
+                                            />
+                                            <TextField
+                                                label="Cover Letter"
+                                                fullWidth
+                                                multiline
+                                                rows={10}
+                                                value={selectedHistoryItem.coverLetter}
+                                                InputProps={{ readOnly: true }}
+                                                variant="outlined"
+                                            />
+                                            <TextField
+                                                label="Job Description"
+                                                fullWidth
+                                                multiline
+                                                rows={10}
+                                                value={selectedHistoryItem.jobDescription}
+                                                InputProps={{ readOnly: true }}
+                                                variant="outlined"
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Tab 1: Resume Preview */}
+                                    {viewDrawerTab === 1 && (
+                                        <div className="p-8 flex justify-center">
+                                            <div className="bg-white text-black max-w-[21cm] w-full min-h-[29.7cm] shadow-2xl p-12 origin-top transform scale-90">
+                                                {selectedHistoryItem.resumeContent ? (
+                                                    <ResumeRender data={selectedHistoryItem.resumeContent} />
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                                                        <FileText size={48} className="mb-4 opacity-50" />
+                                                        <p>No resume content available.</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </Drawer>
             </div>
         </ThemeProvider>
     );

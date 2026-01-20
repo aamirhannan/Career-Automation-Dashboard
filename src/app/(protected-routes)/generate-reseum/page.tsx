@@ -7,7 +7,7 @@ import ResumeHistoryTable, { ResumeLog } from '@/components/resume/ResumeHistory
 import ResumeEditorModal from '@/components/resume/ResumeEditorModal';
 import ResumeRender, { ResumeData } from '@/components/resume/ResumeRender';
 import { ApplicationStatus, ResumeStatus } from '@/lib/types';
-import { Drawer, IconButton, Divider, Button } from '@mui/material';
+import { Drawer, IconButton, Divider, Button, CircularProgress } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
 import { generateResumePDF, getResumes, downloadResumePDF, updateResume } from '@/services/resumeService';
 import { JOB_ROLE_OPTIONS } from '@/lib/constants';
@@ -117,6 +117,10 @@ export default function ResumeBuilderPage() {
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editorData, setEditorData] = useState<any>(MOCK_RESUME_CONTENT);
 
+    // Async Action States
+    const [isSaving, setIsSaving] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
     const handleGenerate = async (profile: string, jobDescription: string) => {
         try {
             setStatus('PROCESSING');
@@ -182,11 +186,14 @@ export default function ResumeBuilderPage() {
         }
 
         try {
+            setDownloadingId(log.id);
             await downloadResumePDF(log.newResumeContent, log.role);
             console.log(`Downloaded resume for ${log.company}`);
         } catch (error) {
             console.error("Failed to download resume PDF", error);
             // Optionally add a toast or alert here
+        } finally {
+            setDownloadingId(null);
         }
     };
 
@@ -211,6 +218,7 @@ export default function ResumeBuilderPage() {
         if (!selectedResume) return;
 
         try {
+            setIsSaving(true);
             // Update UI state immediately for responsiveness (or wait for API)
             setEditorData(newData);
 
@@ -235,6 +243,8 @@ export default function ResumeBuilderPage() {
         } catch (error) {
             console.error("Failed to save resume", error);
             // Optional: Show error feedback
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -268,6 +278,7 @@ export default function ResumeBuilderPage() {
                         onEdit={handleEditResume}
                         resumeData={selectedResume?.newResumeContent}
                         onDownload={() => selectedResume && handleDownloadResume(selectedResume)}
+                        isDownloading={selectedResume?.id === downloadingId}
                     />
                 </div>
             </div>
@@ -278,6 +289,8 @@ export default function ResumeBuilderPage() {
                     data={history}
                     onView={handleViewResume}
                     onDownload={handleDownloadResume}
+                    downloadingId={downloadingId}
+                    selectedId={selectedResume?.id}
                 />
             </div>
 
@@ -287,6 +300,7 @@ export default function ResumeBuilderPage() {
                 onClose={() => setIsEditorOpen(false)}
                 initialData={editorData}
                 onSave={handleSaveResume}
+                isSaving={isSaving}
             />
 
             {/* PDF Preview Drawer */}
@@ -321,7 +335,7 @@ export default function ResumeBuilderPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <IconButton
-                                onClick={() => { setIsDrawerOpen(false); handleEditResume(); }}
+                                onClick={handleEditResume}
                                 sx={{ color: '#94a3b8', '&:hover': { color: '#fff' } }}
                                 title="Edit Content"
                             >
@@ -330,11 +344,19 @@ export default function ResumeBuilderPage() {
                             <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
                             <Button
                                 variant="contained"
-                                startIcon={<Download size={18} />}
+                                startIcon={selectedResume && downloadingId === selectedResume.id ? <CircularProgress size={18} color="inherit" /> : <Download size={18} />}
                                 onClick={() => selectedResume && handleDownloadResume(selectedResume)}
-                                sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' } }}
+                                disabled={!selectedResume || downloadingId === selectedResume.id}
+                                sx={{
+                                    bgcolor: '#7c3aed',
+                                    '&:hover': { bgcolor: '#6d28d9' },
+                                    '&.Mui-disabled': {
+                                        bgcolor: 'rgba(124, 58, 237, 0.5)',
+                                        color: 'rgba(255, 255, 255, 0.7)'
+                                    }
+                                }}
                             >
-                                Download PDF
+                                {selectedResume && downloadingId === selectedResume.id ? 'Downloading...' : 'Download PDF'}
                             </Button>
                             <IconButton onClick={() => setIsDrawerOpen(false)} sx={{ color: 'gray' }}>
                                 <X size={24} />

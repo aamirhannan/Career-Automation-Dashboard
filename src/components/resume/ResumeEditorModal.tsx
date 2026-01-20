@@ -5,7 +5,7 @@ import {
     Dialog, Slide, Button, TextField,
     Accordion, AccordionSummary, AccordionDetails,
     IconButton, Divider, InputAdornment,
-    Tabs, Tab, Box
+    Tabs, Tab, Box, CircularProgress
 } from '@mui/material';
 import {
     Save, FileText, ChevronDown, Plus, Trash2,
@@ -64,6 +64,7 @@ interface ResumeEditorModalProps {
     onClose: () => void;
     initialData: ResumeData;
     onSave: (newData: ResumeData) => void;
+    isSaving?: boolean;
 }
 
 interface TabPanelProps {
@@ -87,7 +88,7 @@ function CustomTabPanel(props: TabPanelProps) {
     );
 }
 
-export default function ResumeEditorModal({ open, onClose, initialData, onSave }: ResumeEditorModalProps) {
+export default function ResumeEditorModal({ open, onClose, initialData, onSave, isSaving = false }: ResumeEditorModalProps) {
     const [formData, setFormData] = useState<ResumeData>(initialData || { header: { contact: {} } });
     const [activeTab, setActiveTab] = useState(0);
 
@@ -293,16 +294,17 @@ export default function ResumeEditorModal({ open, onClose, initialData, onSave }
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
-                            <Button onClick={onClose} sx={{ color: 'gray', '&:hover': { color: 'white' } }}>
+                            <Button onClick={onClose} sx={{ color: 'gray', '&:hover': { color: 'white' } }} disabled={isSaving}>
                                 Cancel
                             </Button>
                             <Button
                                 onClick={() => onSave(formData)}
                                 variant="contained"
-                                startIcon={<Save size={18} />}
+                                startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : <Save size={18} />}
+                                disabled={isSaving}
                                 sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' } }}
                             >
-                                Save Changes
+                                {isSaving ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </div>
                     </div>

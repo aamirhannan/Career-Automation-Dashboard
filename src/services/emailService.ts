@@ -15,12 +15,13 @@ export interface EmailJobResponse {
     jobDescription: string;
     role: string;
     company: string | null;
-    subjectLine: string | null;
+    emailSubject: string | null;
     coverLetter: string | null;
     status: EmailStatus;
     error: string | null;
     createdAt: string;
     updatedAt: string;
+    resumeContent?: any;
 }
 
 export const EmailService = {
