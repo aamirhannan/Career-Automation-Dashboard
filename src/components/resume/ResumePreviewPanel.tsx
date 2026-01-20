@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import ResumeRender from './ResumeRender';
 import GlassCard from '@/components/ui/GlassCard';
 import { Loader2, CheckCircle2, FileText, AlertCircle, Download, Edit3, Share2, Printer } from 'lucide-react';
 import { Button, CircularProgress, IconButton, Tooltip } from '@mui/material';
@@ -10,9 +11,11 @@ interface ResumePreviewPanelProps {
     score?: number;
     addedKeywords?: string[];
     onEdit?: () => void;
+    resumeData?: any;
+    onDownload?: () => void;
 }
 
-export default function ResumePreviewPanel({ status, score = 0, addedKeywords = [], onEdit }: ResumePreviewPanelProps) {
+export default function ResumePreviewPanel({ status, score = 0, addedKeywords = [], onEdit, resumeData, onDownload }: ResumePreviewPanelProps) {
     const isSuccess = status === 'SUCCESS';
     const isProcessing = status === 'PROCESSING' || status === 'GENERATION';
 
@@ -32,7 +35,7 @@ export default function ResumePreviewPanel({ status, score = 0, addedKeywords = 
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Print">
-                            <IconButton size="small" sx={{ color: '#94a3b8' }}>
+                            <IconButton size="small" sx={{ color: '#94a3b8' }} onClick={() => window.print()}>
                                 <Printer size={18} />
                             </IconButton>
                         </Tooltip>
@@ -40,6 +43,7 @@ export default function ResumePreviewPanel({ status, score = 0, addedKeywords = 
                             variant="contained"
                             startIcon={<Download size={16} />}
                             size="small"
+                            onClick={onDownload}
                             sx={{
                                 bgcolor: '#22c55e',
                                 '&:hover': { bgcolor: '#16a34a' },
@@ -141,33 +145,21 @@ export default function ResumePreviewPanel({ status, score = 0, addedKeywords = 
                             </div>
 
                             {/* A4 Paper Mockup */}
-                            <div className="w-[595px] max-w-full aspect-[1/1.414] bg-white text-black shadow-2xl rounded-sm p-8 text-[10px] overflow-hidden relative group origin-top scale-[0.8] md:scale-90 lg:scale-[0.85] xl:scale-100 transition-transform">
-                                <div className="absolute inset-0 bg-gray-50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-center justify-center">
-                                    <Button variant="contained" sx={{ bgcolor: '#1e293b' }}>Click to Zoom</Button>
+                            <div className="w-[595px] max-w-full aspect-[1/1.414] bg-white text-black shadow-2xl rounded-sm text-[10px] overflow-hidden relative group origin-top scale-[0.8] md:scale-90 lg:scale-[0.85] xl:scale-100 transition-transform overflow-y-auto">
+                                <div className="absolute inset-x-0 bottom-0 top-0 pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity flex flex-col justify-end p-4 bg-gradient-to-t from-black/20 to-transparent z-20">
                                 </div>
-                                {/* Skeleton Content for Visual Effect */}
-                                <div className="h-4 w-32 bg-gray-800 mb-1"></div>
-                                <div className="h-3 w-48 bg-gray-500 mb-6"></div>
-
-                                <div className="grid grid-cols-3 gap-6">
-                                    <div className="col-span-2 space-y-4">
-                                        <div className="h-2 w-full bg-gray-200 rounded"></div>
-                                        <div className="h-2 w-full bg-gray-200 rounded"></div>
-                                        <div className="h-2 w-5/6 bg-gray-200 rounded"></div>
-                                        <div className="h-6 w-full mt-4 border-b border-gray-300"></div>
-                                        <div className="space-y-2">
-                                            <div className="h-2 w-full bg-gray-200 rounded"></div>
-                                            <div className="h-2 w-full bg-gray-200 rounded"></div>
-                                            <div className="h-2 w-3/4 bg-gray-200 rounded"></div>
-                                        </div>
+                                {resumeData ? (
+                                    <div className="h-full w-full">
+                                        <ResumeRender
+                                            data={typeof resumeData === 'string' ? JSON.parse(resumeData) : resumeData}
+                                        />
                                     </div>
-                                    <div className="col-span-1 space-y-2">
-                                        <div className="h-3 w-full bg-blue-100 rounded mb-2"></div>
-                                        <div className="flex flex-wrap gap-1">
-                                            {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-4 w-8 bg-gray-100 rounded"></div>)}
-                                        </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                        <Loader2 className="animate-spin mb-2" />
+                                        <p>Loading resume preview...</p>
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </motion.div>
                     )}

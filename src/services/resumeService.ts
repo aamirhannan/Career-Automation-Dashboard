@@ -90,3 +90,16 @@ export const downloadResumePDF = async (newResumeContent: any, role: string): Pr
         throw error;
     }
 };
+
+export const updateResume = async (id: string, newResumeContent: any): Promise<any> => {
+    try {
+        const response = await axios.post(`/resume-generation/update-resume`, {
+            id,
+            newResumeContent: typeof newResumeContent === 'string' ? JSON.parse(newResumeContent) : newResumeContent
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating resume:', error);
+        throw error;
+    }
+};

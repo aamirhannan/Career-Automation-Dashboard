@@ -9,7 +9,7 @@ import ResumeRender, { ResumeData } from '@/components/resume/ResumeRender';
 import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 import { Drawer, IconButton, Divider, Button } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
-import { generateResumePDF, getResumes, downloadResumePDF } from '@/services/resumeService';
+import { generateResumePDF, getResumes, downloadResumePDF, updateResume } from '@/services/resumeService';
 import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
 // const MOCK_HISTORY: ResumeLog[] = [
@@ -91,7 +91,7 @@ export default function ResumeBuilderPage() {
                 // Map API response to ResumeLog interface
                 const mappedHistory: ResumeLog[] = data.map((item: any) => ({
                     id: item.id,
-                    generatedAt: new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                    generatedAt: new Date(item.createdAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
                     company: '',
                     role: item.role,
                     status: item.status,
@@ -126,40 +126,43 @@ export default function ResumeBuilderPage() {
             await new Promise(resolve => setTimeout(resolve, 1000));
             setStatus('GENERATION');
 
-            // 2. Call API
+            // 2. Call API to generate content - The backend creates the record
             const result = await generateResumePDF(profile, jobDescription);
 
-            // 3. Handle PDF Download
-            const url = window.URL.createObjectURL(result.blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', result.filename);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            // 3. Need to fetch the latest resume to get the generated content ID and data
+            // Since the generation API returns PDF blob but saves to DB, we fetch history to get the latest record
+            const freshHistory = await getResumes();
+            const mappedHistory: ResumeLog[] = freshHistory.map((item: any) => ({
+                id: item.id,
+                generatedAt: new Date(item.createdAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
+                company: '',
+                role: item.role,
+                status: item.status,
+                matchScore: 0,
+                newResumeContent: item.newResumeContent,
+            }));
+
+            setHistory(mappedHistory);
 
             // 4. Success
             setStatus('SUCCESS');
-            setCurrentScore(88); // Mock score as API returns PDF only
+            setCurrentScore(88); // Mock score 
             setAddedKeywords(['Optimized based on JD']); // Mock keywords
 
-            // Determine readable role name
-            const roleLabel = JOB_ROLE_OPTIONS.find(p => p.value === profile)?.label || profile;
+            // Select the latest resume (first in current sorted list implied, or find matching one)
+            // Assuming the API returns sorted by latest, or we check the one we just created
+            // For simplicity, we take the most recent one which should be the one just generated
+            if (mappedHistory.length > 0) {
+                const latestResume = mappedHistory[0];
+                setSelectedResume(latestResume);
+                console.log("Auto-selected latest resume for preview:", latestResume.id);
+            }
 
-            // Add to history
-            const newLog: ResumeLog = {
-                id: Date.now().toString(),
-                generatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                company: '', // Ideally we'd extract this from the JD
-                role: roleLabel, // Use label if found
-                status: ResumeStatus.SUCCESS,
-                matchScore: 88,
-                tokenUsage: result?.tokenUsage,
-            };
+            // Note: The previous logic downloaded the PDF immediately. 
+            // The user now wants live preview logic first, download is separate action.
+            // We removed the immediate blob download here as per request "show the pdf in live preview".
 
-            setHistory(prev => [newLog, ...prev]);
-            console.log('Token Usage:', result.tokenUsage);
+            console.log('Generation completed.');
 
         } catch (error) {
             console.error('Generation failed:', error);
@@ -204,10 +207,35 @@ export default function ResumeBuilderPage() {
         setIsEditorOpen(true);
     };
 
-    const handleSaveResume = (newData: any) => {
-        setEditorData(newData);
-        console.log("Saved new resume data:", newData);
-        // Here you would send update to backend
+    const handleSaveResume = async (newData: any) => {
+        if (!selectedResume) return;
+
+        try {
+            // Update UI state immediately for responsiveness (or wait for API)
+            setEditorData(newData);
+
+            // Call API to save changes
+            await updateResume(selectedResume.id, newData);
+
+            // Update local history state
+            const updatedHistory = history.map(item =>
+                item.id === selectedResume.id
+                    ? { ...item, newResumeContent: newData }
+                    : item
+            );
+            setHistory(updatedHistory);
+
+            // Update currently selected resume
+            setSelectedResume({ ...selectedResume, newResumeContent: newData });
+
+            console.log("Saved new resume data and updated state");
+            setIsEditorOpen(false);
+
+            // Optional: Show success feedback
+        } catch (error) {
+            console.error("Failed to save resume", error);
+            // Optional: Show error feedback
+        }
     };
 
     return (
@@ -238,6 +266,8 @@ export default function ResumeBuilderPage() {
                         score={currentScore}
                         addedKeywords={addedKeywords}
                         onEdit={handleEditResume}
+                        resumeData={selectedResume?.newResumeContent}
+                        onDownload={() => selectedResume && handleDownloadResume(selectedResume)}
                     />
                 </div>
             </div>
