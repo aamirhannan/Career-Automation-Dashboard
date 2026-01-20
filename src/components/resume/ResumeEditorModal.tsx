@@ -179,11 +179,24 @@ export default function ResumeEditorModal({ open, onClose, initialData, onSave }
     // Skills are Record<string, string[] | string>. We'll simplify editing by assuming categories are keys
     const handleSkillCategoryChange = (oldCategory: string, newCategory: string) => {
         if (oldCategory === newCategory) return;
-        const skills = { ...formData.technicalSkills };
-        const content = skills[oldCategory];
-        delete skills[oldCategory];
-        skills[newCategory] = content;
-        setFormData(prev => ({ ...prev, technicalSkills: skills }));
+
+        setFormData(prev => {
+            const skills = prev.technicalSkills || {};
+            const keys = Object.keys(skills);
+            const newSkills: Record<string, string[] | string> = {};
+
+            keys.forEach(key => {
+                if (key === oldCategory) {
+                    newSkills[newCategory] = skills[key];
+                } else if (key !== newCategory) {
+                    // key !== newCategory ensures we don't accidentally duplicate or overwrite 
+                    // if the user types a name that matches an existing key (though rare/collision)
+                    newSkills[key] = skills[key];
+                }
+            });
+
+            return { ...prev, technicalSkills: newSkills };
+        });
     };
 
     const handleSkillContentChange = (category: string, value: string) => {
