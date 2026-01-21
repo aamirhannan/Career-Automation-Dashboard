@@ -39,7 +39,7 @@ interface SentEmail {
     company?: string | null;
     recipient: string;
     sentAt: string;
-    status: 'SUCCESS' | 'REJECTED';
+    status: 'SUCCESS' | 'REJECTED' | 'FAILED';
     subject: string;
     coverLetter: string;
     jobDescription: string;
@@ -109,13 +109,13 @@ export default function EmailAgentPage() {
 
                 emails.forEach(email => {
                     // Check statuses that belong in history: SUCCESS, REJECTED
-                    if (email.status === 'SUCCESS' || email.status === 'REJECTED') {
+                    if (email.status === 'SUCCESS' || email.status === 'REJECTED' || email.status === 'FAILED') {
                         newHistory.push({
                             id: email.id,
                             role: email.role,
                             company: email.company,
                             recipient: email.targetEmail,
-                            sentAt: new Date(email.updatedAt).toLocaleDateString(),
+                            sentAt: new Date(email.updatedAt).toLocaleString(),
                             status: email.status, // 'SUCCESS' | 'REJECTED'
                             subject: email.emailSubject || `Application for ${email.role}`,
                             jobDescription: email.jobDescription,
@@ -140,7 +140,7 @@ export default function EmailAgentPage() {
                 });
 
                 setDrafts(newDrafts);
-                setHistory(newHistory.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()));
+                setHistory(newHistory);
             } catch (error) {
                 console.error("Failed to fetch emails:", error);
             } finally {
