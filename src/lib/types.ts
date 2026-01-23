@@ -126,6 +126,7 @@ export interface HeatmapDataPoint {
 }
 
 export interface UserSettings {
+  appPassword?: string;
   blockedEmails: string[];
   blockedDomains: string[];
   dailyLimit: number;

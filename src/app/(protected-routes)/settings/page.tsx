@@ -14,7 +14,10 @@ import {
     X,
     Plus,
     Save,
-    CheckCircle2
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    Key
 } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { UserSettings } from '@/lib/types';
@@ -45,6 +48,7 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 const INITIAL_SETTINGS: UserSettings = {
+    appPassword: '',
     blockedEmails: [],
     blockedDomains: [],
     dailyLimit: 0,
@@ -58,6 +62,7 @@ export default function SettingsPage() {
     // Edit States
     // Profile is read-only from Google/Auth
     const [isEditingSettings, setIsEditingSettings] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     // Temporary State for edits
     const [tempSettings, setTempSettings] = useState<UserSettings>(INITIAL_SETTINGS);
@@ -109,9 +114,9 @@ export default function SettingsPage() {
         try {
             // Ensure userId is present if it wasn't fetched
             const payload = { ...tempSettings };
-            if (!payload.userId && settings.userId) {
-                payload.userId = settings.userId;
-            }
+            // if (!payload.userId && settings.userId) {
+            //     payload.userId = settings.userId;
+            // }
 
             // Service now expects partial UserSettings (camelCase)
             const updated = await SettingsService.updateUserSettings(payload);
@@ -273,6 +278,58 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="space-y-8">
+
+                            {/* App Password */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-white/5">
+                                <div>
+                                    <h4 className="flex items-center gap-2 text-white font-semibold mb-2">
+                                        <Key size={18} className="text-green-500" />
+                                        App Password
+                                    </h4>
+                                    <p className="text-sm text-gray-400">
+                                        Your email app password for sending automated emails. This is stored securely.
+                                    </p>
+                                    <a
+                                        href="https://myaccount.google.com/apppasswords"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300 mt-2 transition-colors"
+                                    >
+                                        Generate app password →
+                                    </a>
+                                </div>
+                                <div className="flex items-center">
+                                    {isEditingSettings ? (
+                                        <div className="relative w-full max-w-[300px]">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={tempSettings.appPassword || ''}
+                                                onChange={(e) => setTempSettings({ ...tempSettings, appPassword: e.target.value })}
+                                                placeholder="Enter app password..."
+                                                className="w-full bg-dark-900/50 border border-white/10 rounded-lg pl-4 pr-12 py-2.5 text-white focus:outline-none focus:border-primary-500 transition-colors placeholder:text-gray-600"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-300 transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="text-white font-mono">
+                                            {settings.appPassword ? (
+                                                <span className="text-green-400 flex items-center gap-2">
+                                                    <CheckCircle2 size={16} />
+                                                    ••••••••••••
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-500 italic">Not set</span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* Daily Limit */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-8 border-b border-white/5">
