@@ -4,15 +4,37 @@ import { MOCK_LOGS } from '@/lib/constants';
 import { LogEntry } from '@/lib/types';
 import LogsTable from '@/components/logs/LogsTable';
 import DashboardFilter from '@/components/ui/DashboardFilter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { isWithinInterval, startOfDay, endOfDay } from 'date-fns';
+import { LogService } from '@/services/logService';
 
 export default function LogsPage() {
-    const [filteredLogs, setFilteredLogs] = useState<LogEntry[]>(MOCK_LOGS as unknown as LogEntry[]);
+    const [allLogs, setAllLogs] = useState<LogEntry[]>([]);
+    const [filteredLogs, setFilteredLogs] = useState<LogEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                const logs = await LogService.getAllRequestLogs();
+                setAllLogs(logs);
+                setFilteredLogs(logs);
+            } catch (error) {
+                console.error("Failed to fetch logs in LogsPage:", error);
+                // Fallback to mock data if API fails (optional, good for dev)
+                // setAllLogs(MOCK_LOGS);
+                // setFilteredLogs(MOCK_LOGS);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchLogs();
+    }, []);
 
     const handleDateRangeChange = (range: { startDate: Date; endDate: Date } | null) => {
         if (!range) {
-            setFilteredLogs(MOCK_LOGS as unknown as LogEntry[]);
+            setFilteredLogs(allLogs);
             return;
         }
 
@@ -20,9 +42,8 @@ export default function LogsPage() {
         const normalizedStart = startOfDay(startDate);
         const normalizedEnd = endOfDay(endDate);
 
-        const filtered = (MOCK_LOGS as unknown as LogEntry[]).filter(log => {
-            // timestamp might be ISO string or other format. MOCK_LOGS usually nice ISO strings.
-            const logDate = new Date(log.timestamp);
+        const filtered = allLogs.filter(log => {
+            const logDate = new Date(log.createdAt);
             return isWithinInterval(logDate, { start: normalizedStart, end: normalizedEnd });
         });
         setFilteredLogs(filtered);
@@ -39,7 +60,11 @@ export default function LogsPage() {
             </div>
 
             <div className="flex-1">
-                <LogsTable logs={filteredLogs} />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-full text-gray-400">Loading logs...</div>
+                ) : (
+                    <LogsTable logs={filteredLogs} />
+                )}
             </div>
         </div>
     );

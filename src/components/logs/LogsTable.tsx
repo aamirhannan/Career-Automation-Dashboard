@@ -1,7 +1,6 @@
 'use client';
 
-import { LogEntry, LogStatus } from '@/lib/types';
-import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
+import { LogEntry } from '@/lib/types';
 import {
     IconButton,
     Chip,
@@ -9,20 +8,23 @@ import {
     ThemeProvider,
     createTheme,
     Dialog,
-    DialogTitle,
     DialogContent,
     Typography,
     Drawer,
-    List,
-    ListItem,
-    ListItemText,
-    Divider
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    TablePagination
 } from '@mui/material';
-import { X, ExternalLink, MoreHorizontal, Coins, Database, Cpu, Wallet } from 'lucide-react'; // Using ExternalLink as 'Explore' icon replacement or just keep View logic
+import { X, MoreHorizontal, Coins, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
 
-// Create a dark theme instance for the DataGrid
+// Create a dark theme instance
 const darkTheme = createTheme({
     palette: {
         mode: 'dark',
@@ -39,43 +41,58 @@ const darkTheme = createTheme({
         },
     },
     components: {
-        MuiDataGrid: {
+        MuiTableCell: {
             styleOverrides: {
                 root: {
-                    border: 'none',
-                    backgroundColor: 'rgba(26, 28, 35, 0.6)', // dark-800 with opacity
-                    backdropFilter: 'blur(12px)',
-                    borderRadius: '1rem', // rounded-2xl
-                    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', // glass shadow
-                    '& .MuiDataGrid-cell': {
-                        borderColor: 'rgba(255, 255, 255, 0.05)',
-                        color: '#cbd5e1', // text-slate-300
-                    },
-                    '& .MuiDataGrid-columnHeaders': {
-                        borderColor: 'rgba(255, 255, 255, 0.05)',
-                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
-                        color: '#94a3b8', // text-gray-400
-                        fontSize: '0.75rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                    },
-                    '& .MuiDataGrid-row:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                    },
-                    '& .MuiDataGrid-footerContainer': {
-                        borderColor: 'rgba(255, 255, 255, 0.05)',
-                    },
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                    color: '#cbd5e1',
+                    padding: '16px',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden',
+                },
+                head: {
+                    color: '#94a3b8',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                    backgroundColor: 'rgba(255, 255, 255, 0.02)',
                 },
             },
         },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: 'rgba(26, 28, 35, 0.6)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                }
+            }
+        },
+        MuiTablePagination: {
+            styleOverrides: {
+                root: {
+                    color: '#94a3b8',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                },
+                selectIcon: {
+                    color: '#94a3b8',
+                },
+                actions: {
+                    color: '#94a3b8',
+                }
+            }
+        }
     },
 });
 
-const getStatusChipColor = (status: LogStatus) => {
-    switch (status) {
-        case LogStatus.Success: return 'success';
-        case LogStatus.Failed: return 'error';
-        case LogStatus.Warning: return 'warning';
+const getStatusChipColor = (status: string) => {
+    switch (status?.toUpperCase()) {
+        case 'SUCCESS': return 'success';
+        case 'FAILED': return 'error';
+        case 'WARNING': return 'warning';
+        case 'PENDING': return 'default';
         default: return 'default';
     }
 };
@@ -85,6 +102,10 @@ interface LogsTableProps {
 }
 
 export default function LogsTable({ logs }: LogsTableProps) {
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(25);
+
+    // Modal State
     const [openModal, setOpenModal] = useState(false);
     const [modalTitle, setModalTitle] = useState('');
     const [modalContent, setModalContent] = useState('');
@@ -92,6 +113,15 @@ export default function LogsTable({ logs }: LogsTableProps) {
     // Drawer State
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+
+    const handleChangePage = (event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
 
     const handleOpenModal = (title: string, content: string) => {
         setModalTitle(title);
@@ -113,132 +143,115 @@ export default function LogsTable({ logs }: LogsTableProps) {
         setSelectedLog(null);
     };
 
-    const columns: GridColDef[] = [
-        {
-            field: 'company',
-            headerName: 'Company / Role',
-            width: 250,
-            renderCell: (params: GridRenderCellParams) => (
-                <div className="flex flex-col justify-center h-full leading-tight">
-                    <span className="font-medium text-white text-sm">{params.row.company}</span>
-                    <span className="text-xs text-[#94a3b8]">{params.row.role}</span>
-                </div>
-            )
-        },
-        {
-            field: 'timestamp',
-            headerName: 'Date',
-            width: 180,
-            renderCell: (params: GridRenderCellParams) => (
-                <span className="text-gray-400">
-                    {format(new Date(params.value), 'dd/MM/yyyy, h:mm a')}
-                </span>
-            )
-        },
-        {
-            field: 'status',
-            headerName: 'Status',
-            width: 120,
-            renderCell: (params: GridRenderCellParams) => (
-                <Chip
-                    label={params.value}
-                    size="small"
-                    color={getStatusChipColor(params.value as LogStatus)}
-                    variant="outlined"
-                    sx={{ fontWeight: 600, fontSize: '0.75rem' }}
-                />
-            )
-        },
-        { field: 'type', headerName: 'Type', width: 150 },
-        {
-            field: 'jobDescription',
-            headerName: 'Job Description',
-            width: 200,
-            renderCell: (params: GridRenderCellParams) => (
-                <div
-                    className="cursor-pointer text-primary hover:text-primary/80 truncate w-full flex items-center gap-1 group"
-                    onClick={() => handleOpenModal('Job Description', params.value)}
-                >
-                    <span className="truncate">{params.value}</span>
-                    <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-            )
-        },
-        {
-            field: 'subject',
-            headerName: 'Subject',
-            width: 200,
-            renderCell: (params: GridRenderCellParams) => (
-                <div
-                    className="cursor-pointer text-primary hover:text-primary/80 truncate w-full flex items-center gap-2 group"
-                    onClick={() => handleOpenModal('Subject', params.value)}
-                >
-                    <span className="truncate">{params.value || 'N/A'}</span>
-                    {params.value && params.value !== 'N/A' && <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
-                </div>
-            )
-        },
-        {
-            field: 'coverLetter',
-            headerName: 'Cover Letter',
-            width: 200,
-            renderCell: (params: GridRenderCellParams) => (
-                <div
-                    className="cursor-pointer text-primary hover:text-primary/80 truncate w-full flex items-center gap-2 group"
-                    onClick={() => handleOpenModal('Cover Letter', params.value)}
-                >
-                    <span className="truncate">{params.value || 'N/A'}</span>
-                    {params.value && params.value !== 'N/A' && <ExternalLink size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />}
-                </div>
-            )
-        },
-        {
-            field: 'tokenUsage',
-            headerName: 'Token Usage',
-            width: 120,
-            sortable: false,
-            renderCell: (params: GridRenderCellParams) => (
-                <div className="flex items-center justify-center w-full">
-                    <IconButton
-                        onClick={() => handleOpenDrawer(params.row)}
-                        sx={{
-                            color: '#94a3b8',
-                            '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.05)' }
-                        }}
-                    >
-                        <MoreHorizontal size={18} />
-                    </IconButton>
-                </div>
-            )
-        }
-    ];
+    // Calculate displayed rows
+    const displayedLogs = logs.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     return (
         <ThemeProvider theme={darkTheme}>
-            <Box sx={{ width: '100%', height: 'calc(100vh - 200px)' }}>
-                <DataGrid
-                    rows={logs}
-                    columns={columns}
-                    initialState={{
-                        pagination: {
-                            paginationModel: { pageSize: 25, page: 0 },
-                        },
-                    }}
-                    pageSizeOptions={[25, 50, 75, 100]}
-                    checkboxSelection
-                    disableRowSelectionOnClick
-                    slots={{ toolbar: GridToolbar }}
-                    slotProps={{
-                        toolbar: {
-                            showQuickFilter: true,
-                            quickFilterProps: { debounceMs: 500 },
-                        },
-                    }}
+            <Box sx={{ width: '100%', overflow: 'hidden' }}>
+                <TableContainer component={Paper} elevation={0} sx={{ maxHeight: 'calc(100vh - 200px)', borderRadius: '1rem' }}>
+                    <Table stickyHeader aria-label="logs table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Company / Role</TableCell>
+                                <TableCell>Date</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell align="center">Request</TableCell>
+                                <TableCell align="center">Response</TableCell>
+                                <TableCell align="center">Actions</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {displayedLogs.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} align="center" sx={{ py: 8 }}>
+                                        <Typography variant="body1" color="text.secondary">
+                                            No logs found
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                displayedLogs.map((log) => (
+                                    <TableRow
+                                        key={log.id}
+                                        hover
+                                        sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.04) !important' } }}
+                                    >
+                                        <TableCell>
+                                            <div className="flex flex-col justify-center leading-tight">
+                                                <span className="font-medium text-white text-sm">{log.company || 'Unknown Company'}</span>
+                                                <span className="text-xs text-[#94a3b8]">{log.role || 'N/A'}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <span className="text-gray-400">
+                                                {log.createdAt ? format(new Date(log.createdAt), 'dd/MM/yyyy, h:mm a') : 'N/A'}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={log.status}
+                                                size="small"
+                                                color={getStatusChipColor(log.status)}
+                                                variant="outlined"
+                                                sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                                            />
+                                        </TableCell>
+                                        <TableCell>{log.type}</TableCell>
+                                        <TableCell align="center">
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleOpenModal('Request Payload', JSON.stringify(log.requestPayload, null, 2))}
+                                                sx={{ color: 'primary.main' }}
+                                            >
+                                                <Eye size={18} />
+                                            </IconButton>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <IconButton
+                                                size="small"
+                                                onClick={() => handleOpenModal('Response Payload', JSON.stringify(log.responsePayload, null, 2))}
+                                                sx={{ color: 'primary.main' }}
+                                            >
+                                                <Eye size={18} />
+                                            </IconButton>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <IconButton
+                                                onClick={() => handleOpenDrawer(log)}
+                                                sx={{
+                                                    color: '#94a3b8',
+                                                    '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.05)' }
+                                                }}
+                                            >
+                                                <MoreHorizontal size={18} />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+
+                <TablePagination
+                    rowsPerPageOptions={[25, 50, 75, 100]}
+                    component="div"
+                    count={logs.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
                     sx={{
-                        '& .MuiTablePagination-root': {
+                        color: '#94a3b8',
+                        '.MuiTablePagination-select': {
                             color: '#94a3b8',
                         },
-                        '& .MuiToolbar-root': {
+                        '.MuiTablePagination-selectIcon': {
+                            color: '#94a3b8',
+                        },
+                        '.MuiTablePagination-actions': {
                             color: '#94a3b8',
                         }
                     }}
@@ -271,7 +284,7 @@ export default function LogsTable({ logs }: LogsTableProps) {
                     </IconButton>
                 </div>
                 <DialogContent sx={{ p: 4 }}>
-                    <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                    <div className="text-gray-300 whitespace-pre-wrap leading-relaxed max-h-[60vh] overflow-y-auto font-mono text-sm">
                         {modalContent}
                     </div>
                 </DialogContent>
@@ -284,7 +297,7 @@ export default function LogsTable({ logs }: LogsTableProps) {
                 onClose={handleCloseDrawer}
                 PaperProps={{
                     sx: {
-                        width: 350,
+                        width: 450, // Increased width for better JSON viewing
                         bgcolor: '#0d0e12', // dark-900
                         borderLeft: '1px solid rgba(255,255,255,0.1)',
                         color: 'white'
@@ -295,7 +308,7 @@ export default function LogsTable({ logs }: LogsTableProps) {
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-xl font-bold flex items-center gap-2">
                             <Coins size={20} className="text-primary" />
-                            Usage Details
+                            Log Details
                         </h3>
                         <IconButton onClick={handleCloseDrawer} sx={{ color: 'gray' }}>
                             <X size={20} />
@@ -303,42 +316,33 @@ export default function LogsTable({ logs }: LogsTableProps) {
                     </div>
 
                     {selectedLog && (
-                        <div className="space-y-6">
-                            <div className="p-4 rounded-xl bg-dark-800/50 border border-white/5 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3 text-gray-400">
-                                        <Database size={16} />
-                                        <span className="text-sm">Input Tokens</span>
-                                    </div>
-                                    <span className="font-mono font-medium">{selectedLog.inputTokens.toLocaleString()}</span>
-                                </div>
-                                <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3 text-gray-400">
-                                        <Cpu size={16} />
-                                        <span className="text-sm">Output Tokens</span>
-                                    </div>
-                                    <span className="font-mono font-medium">{selectedLog.outputTokens.toLocaleString()}</span>
-                                </div>
-                                <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3 text-primary">
-                                        <Coins size={16} />
-                                        <span className="text-sm font-semibold">Total Tokens</span>
-                                    </div>
-                                    <span className="font-mono font-bold text-primary text-lg">{selectedLog.totalTokens.toLocaleString()}</span>
+                        <div className="space-y-6 flex-1 overflow-y-auto">
+                            <div className="space-y-2">
+                                <div className="text-sm text-gray-400">ID</div>
+                                <div className="font-mono text-sm bg-black/30 p-2 rounded border border-white/5 overflow-hidden text-ellipsis">
+                                    {selectedLog.id}
                                 </div>
                             </div>
 
-                            <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20">
-                                <div className="flex items-center gap-3 mb-2 text-primary">
-                                    <Wallet size={20} />
-                                    <span className="font-semibold">Total Cost</span>
+                            <div className="space-y-2">
+                                <div className="text-sm text-gray-400">Timestamps</div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-dark-800/50 p-3 rounded border border-white/5">
+                                        <div className="text-xs text-gray-500 mb-1">Created</div>
+                                        <div className="text-sm">{selectedLog.createdAt ? format(new Date(selectedLog.createdAt), 'MMM d, h:mm:ss a') : '-'}</div>
+                                    </div>
+                                    <div className="bg-dark-800/50 p-3 rounded border border-white/5">
+                                        <div className="text-xs text-gray-500 mb-1">Duration</div>
+                                        <div className="text-sm">{selectedLog.durationMs ? `${selectedLog.durationMs}ms` : '-'}</div>
+                                    </div>
                                 </div>
-                                <div className="text-3xl font-mono font-bold text-white tracking-tight">
-                                    ${selectedLog.cost.toFixed(6)}
-                                </div>
-                                <p className="text-xs text-primary/60 mt-2">Estimated cost for this run</p>
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-dark-800/50 border border-white/5 space-y-4">
+                                <div className="text-gray-400 text-sm mb-2 font-mono">Full JSON Payload:</div>
+                                <pre className="text-xs text-gray-300 font-mono whitespace-pre-wrap bg-black/30 p-4 rounded overflow-x-auto border border-white/5 max-h-[500px] overflow-y-auto custom-scrollbar">
+                                    {JSON.stringify(selectedLog, null, 2)}
+                                </pre>
                             </div>
                         </div>
                     )}

@@ -70,20 +70,48 @@ export enum LogType {
   JobParsing = 'Job Parsing',
 }
 
+export interface LogTokenUsage {
+  cost: number;
+  input: number;
+  total: number;
+  output: number;
+}
+
+export interface LogExecutionStep {
+  step: string;
+  status: string; // 'START' | 'SUCCESS' | 'FAILED' etc
+  timestamp: string;
+  workerId?: string;
+  duration_ms?: number;
+  token_usage?: LogTokenUsage;
+}
+
 export interface LogEntry {
   id: string;
-  timestamp: string;
-  status: LogStatus;
-  type: LogType;
-  company: string;
-  role: JobRole;
-  jobDescription: string;
-  subject: string;
-  coverLetter: string;
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  cost: number;
+  userId: string;
+  type: string;
+  endpoint: string;
+  requestPayload: {
+    role?: string;
+    target_email?: string;
+    job_description?: string;
+    [key: string]: any;
+  };
+  responsePayload: {
+    cover_letter?: string;
+    email_subject?: string;
+    resume_content?: any;
+    [key: string]: any;
+  };
+  status: string;
+  statusCode: number;
+  executionLogs: LogExecutionStep[];
+  durationMs: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+  role: string;
+  company: string | null;
 }
 
 export interface NavItem {
