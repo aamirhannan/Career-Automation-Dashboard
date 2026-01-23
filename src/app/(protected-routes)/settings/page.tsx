@@ -1,12 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
     User,
     Mail,
-    Phone,
-    MapPin,
     Shield,
     Globe,
     Zap,
@@ -21,10 +18,10 @@ import {
 } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import { UserSettings } from '@/lib/types';
-import { SettingsService } from '@/services/settingsService';
-import { createClient } from '@/utils/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { useUserSettings } from '@/context/UserSettingsContext';
 
-// Mock Data Types
+// User Profile type (from auth)
 interface UserProfile {
     firstName: string;
     lastName: string;
@@ -35,7 +32,7 @@ interface UserProfile {
     avatarUrl?: string;
 }
 
-// Initial Empty Data
+// Initial Empty Profile Data
 const INITIAL_PROFILE: UserProfile = {
     firstName: '',
     lastName: '',
@@ -43,89 +40,54 @@ const INITIAL_PROFILE: UserProfile = {
     phone: '',
     role: 'User',
     location: '',
-    // Default placeholder if none provided
     avatarUrl: '',
 };
 
-const INITIAL_SETTINGS: UserSettings = {
-    appPassword: '',
-    blockedEmails: [],
-    blockedDomains: [],
-    dailyLimit: 0,
-};
-
 export default function SettingsPage() {
+    const { user } = useAuth();
+    const { settings, isLoading, updateSettings } = useUserSettings();
+
     const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
-    const [settings, setSettings] = useState<UserSettings>(INITIAL_SETTINGS);
-    const [isLoading, setIsLoading] = useState(true);
 
     // Edit States
-    // Profile is read-only from Google/Auth
     const [isEditingSettings, setIsEditingSettings] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Temporary State for edits
-    const [tempSettings, setTempSettings] = useState<UserSettings>(INITIAL_SETTINGS);
+    // Temporary State for edits (local copy of settings)
+    const [tempSettings, setTempSettings] = useState<UserSettings>(settings);
 
+    // Sync tempSettings when global settings change
     useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            const supabase = createClient();
+        setTempSettings(settings);
+    }, [settings]);
 
-            // 1. Fetch Auth Profile
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                // Extract what we can from user metadata (Google usually provides these)
-                const metadata = user.user_metadata || {};
-                setProfile({
-                    firstName: metadata.full_name?.split(' ')[0] || metadata.given_name || 'User',
-                    lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.family_name || '',
-                    email: user.email || '',
-                    phone: user.phone || '',
-                    role: 'User', // Placeholder or from metadata if available
-                    location: '', // Placeholder
-                    avatarUrl: metadata.avatar_url || metadata.picture || '',
-                });
-
-                // Initialize settings with userId even if fetch fails
-                setSettings(prev => ({ ...prev, userId: user.id }));
-                setTempSettings(prev => ({ ...prev, userId: user.id }));
-            }
-
-            // 2. Fetch User Settings
-            try {
-                const fetchedSettings = await SettingsService.getUserSettings();
-                if (fetchedSettings) {
-                    setSettings(fetchedSettings);
-                    setTempSettings(fetchedSettings);
-                }
-            } catch (error) {
-                console.warn('Failed to fetch settings or they do not exist yet:', error);
-                // If 404 or similar, we just stick with defaults which allows the user to 'create' them on save
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    // Extract profile from auth user
+    useEffect(() => {
+        if (user) {
+            const metadata = user.user_metadata || {};
+            setProfile({
+                firstName: metadata.full_name?.split(' ')[0] || metadata.given_name || 'User',
+                lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.family_name || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                role: 'User',
+                location: '',
+                avatarUrl: metadata.avatar_url || metadata.picture || '',
+            });
+        }
+    }, [user]);
 
     const handleSaveSettings = async () => {
         try {
-            // Ensure userId is present if it wasn't fetched
-            const payload = { ...tempSettings };
-            // if (!payload.userId && settings.userId) {
-            //     payload.userId = settings.userId;
-            // }
-
-            // Service now expects partial UserSettings (camelCase)
-            const updated = await SettingsService.updateUserSettings(payload);
-            setSettings(updated);
-            setTempSettings(updated);
+            setIsSaving(true);
+            await updateSettings(tempSettings);
             setIsEditingSettings(false);
         } catch (error) {
             console.error('Failed to update settings:', error);
             alert('Failed to save settings. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -159,7 +121,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-center h-full min-h-[50vh]">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary-500"></div>
             </div>
-        )
+        );
     }
 
     return (
@@ -248,7 +210,7 @@ export default function SettingsPage() {
                         </div>
                     </GlassCard>
 
-                    {/* Automation & Safety Settings (DB Schema Fields) */}
+                    {/* Automation & Safety Settings */}
                     <GlassCard className="p-6">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -269,9 +231,15 @@ export default function SettingsPage() {
                                 {isEditingSettings && (
                                     <button
                                         onClick={handleSaveSettings}
-                                        className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white rounded-lg flex items-center gap-2 shadow-lg shadow-primary-600/20 transition-all"
+                                        disabled={isSaving}
+                                        className="px-4 py-2 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg flex items-center gap-2 shadow-lg shadow-primary-600/20 transition-all"
                                     >
-                                        <Save size={16} /> Save
+                                        {isSaving ? (
+                                            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-white"></div>
+                                        ) : (
+                                            <Save size={16} />
+                                        )}
+                                        {isSaving ? 'Saving...' : 'Save'}
                                     </button>
                                 )}
                             </div>
@@ -488,17 +456,6 @@ export default function SettingsPage() {
 
                         </div>
                     </GlassCard>
-
-                    {/* Read-Only Metadata */}
-                    {settings.workspaceId && (
-                        <GlassCard className="p-6 opacity-60">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 font-mono">
-                                <div>User ID: {settings.userId}</div>
-                                <div>Workspace ID: {settings.workspaceId}</div>
-                                <div>Last Updated: {settings.updatedAt ? new Date(settings.updatedAt).toLocaleString() : 'Never'}</div>
-                            </div>
-                        </GlassCard>
-                    )}
 
                 </div>
             </div>

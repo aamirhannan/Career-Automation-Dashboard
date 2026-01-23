@@ -1,17 +1,16 @@
 import axios from 'axios';
 import { createClient } from '@/utils/supabase/client';
+import { getSettingsStore, getUserEmail } from './settingsStore';
 
 // Create a singleton instance
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api/v1', // Default to local Node backend
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api/v1',
     headers: {
         'Content-Type': 'application/json',
-        
-
     },
 });
 
-// Request Interceptor: Attaches the Supabase JWT to every request
+// Request Interceptor: Attaches auth token and user settings to every request
 api.interceptors.request.use(
     async (config) => {
         const supabase = createClient();
@@ -19,21 +18,37 @@ api.interceptors.request.use(
         // Get the current session
         const { data: { session } } = await supabase.auth.getSession();
 
-        console.log("Session:", session);
-
         if (session?.access_token) {
             config.headers.Authorization = `Bearer ${session.access_token}`;
         }
 
-        // Attach SMTP credentials if available
-        const smtpEmail = process.env.NEXT_PUBLIC_SMTP_EMAIL;
-        const smtpPassword = process.env.NEXT_PUBLIC_SMTP_PASSWORD;
+        // Get user settings from the global store
+        const settings = getSettingsStore();
+        const userEmail = getUserEmail();
 
-        if (smtpEmail) {
-            config.headers['x-smtp-email'] = smtpEmail;
+        // Attach user email
+        if (userEmail) {
+            config.headers['x-user-email'] = userEmail;
         }
-        if (smtpPassword) {
-            config.headers['x-smtp-password'] = smtpPassword;
+
+        // Attach app password (for SMTP)
+        if (settings.appPassword) {
+            config.headers['x-app-password'] = settings.appPassword;
+        }
+
+        // Attach blocked emails as JSON string
+        if (settings.blockedEmails && settings.blockedEmails.length > 0) {
+            config.headers['x-blocked-emails'] = JSON.stringify(settings.blockedEmails);
+        }
+
+        // Attach blocked domains as JSON string
+        if (settings.blockedDomains && settings.blockedDomains.length > 0) {
+            config.headers['x-blocked-domains'] = JSON.stringify(settings.blockedDomains);
+        }
+
+        // Attach daily limit
+        if (settings.dailyLimit !== undefined) {
+            config.headers['x-daily-limit'] = String(settings.dailyLimit);
         }
 
         return config;
@@ -47,8 +62,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // You could add logic here to redirect to /login if 401 is received
-        // console.error("API Error:", error.response?.status, error.message);
+        // Could add logic here to redirect to /login if 401 is received
         return Promise.reject(error);
     }
 );
