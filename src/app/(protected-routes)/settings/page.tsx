@@ -45,13 +45,9 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 const INITIAL_SETTINGS: UserSettings = {
-    userId: '',
-    userSettingId: '',
     blockedEmails: [],
     blockedDomains: [],
     dailyLimit: 0,
-    createdAt: undefined,
-    updatedAt: undefined,
 };
 
 export default function SettingsPage() {
@@ -258,8 +254,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={toggleSettingsEdit}
                                     className={`px-4 py-2 rounded-lg border transition-all flex items-center gap-2 ${isEditingSettings
-                                            ? 'bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20'
-                                            : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
+                                        ? 'bg-red-500/10 border-red-500/50 text-red-500 hover:bg-red-500/20'
+                                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
                                         }`}
                                 >
                                     {isEditingSettings ? <X size={16} /> : <Edit2 size={16} />}
@@ -437,11 +433,11 @@ export default function SettingsPage() {
                     </GlassCard>
 
                     {/* Read-Only Metadata */}
-                    {settings.userSettingId && (
+                    {settings.workspaceId && (
                         <GlassCard className="p-6 opacity-60">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-gray-600 font-mono">
                                 <div>User ID: {settings.userId}</div>
-                                <div>Settings ID: {settings.userSettingId}</div>
+                                <div>Workspace ID: {settings.workspaceId}</div>
                                 <div>Last Updated: {settings.updatedAt ? new Date(settings.updatedAt).toLocaleString() : 'Never'}</div>
                             </div>
                         </GlassCard>
