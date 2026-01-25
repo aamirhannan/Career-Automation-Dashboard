@@ -102,7 +102,7 @@ export interface LogEntry {
     email_subject?: string;
     resume_content?: any;
     [key: string]: any;
-  };
+  } | null;
   status: string;
   statusCode: number;
   executionLogs: LogExecutionStep[];
@@ -117,7 +117,7 @@ export interface LogEntry {
 export interface NavItem {
   label: string;
   href: string;
-  icon: 'layout-dashboard' | 'file-text' | 'settings' | 'bar-chart' | 'mail' | 'users' | 'list';
+  icon: 'layout-dashboard' | 'file-text' | 'settings' | 'bar-chart' | 'mail' | 'users' | 'list' | 'briefcase';
 }
 
 export interface HeatmapDataPoint {

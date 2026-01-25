@@ -21,6 +21,7 @@ export const MOCK_HEATMAP_DATA = generateMockHeatmapData();
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: 'layout-dashboard' },
+  { label: 'Job Profiles', href: '/job-profile', icon: 'briefcase' },
   { label: 'Resume PDF Generator', href: '/generate-reseum', icon: 'file-text' },
   { label: 'Email Automation', href: '/email-agent', icon: 'mail' },
   { label: 'Founder Outreach', href: '/founder-outreach', icon: 'users' },
