@@ -91,7 +91,7 @@ interface InputFieldProps {
     isEditing?: boolean;
 }
 
-const InputField = ({ label, value, onChange, placeholder, type = 'text', disabled = false, isEditing = true }: InputFieldProps) => (
+const InputField = ({ label, value, onChange, placeholder, type = 'text', disabled = false, isEditing = false }: InputFieldProps) => (
     <div className="space-y-2">
         <label className="text-sm text-gray-400">{label}</label>
         {isEditing && !disabled ? (
@@ -117,7 +117,7 @@ interface TextAreaFieldProps {
     isEditing?: boolean;
 }
 
-const TextAreaField = ({ label, value, onChange, placeholder, rows = 4, isEditing = true }: TextAreaFieldProps) => (
+const TextAreaField = ({ label, value, onChange, placeholder, rows = 4, isEditing = false }: TextAreaFieldProps) => (
     <div className="space-y-2">
         <label className="text-sm text-gray-400">{label}</label>
         {isEditing ? (
@@ -143,7 +143,7 @@ interface TagInputProps {
     isEditing?: boolean;
 }
 
-const TagInput = ({ label, tags, onAdd, onRemove, placeholder, isEditing = true }: TagInputProps) => (
+const TagInput = ({ label, tags, onAdd, onRemove, placeholder, isEditing = false }: TagInputProps) => (
     <div className="space-y-2">
         <label className="text-sm text-gray-400">{label}</label>
         {isEditing && (
@@ -444,6 +444,7 @@ export default function JobProfileDetailPage() {
                     value={profile.profileName}
                     onChange={(v: string) => updateProfile('profileName', v)}
                     placeholder="Enter profile name..."
+                    isEditing={isEditing}
                 />
             </GlassCard>
 
@@ -457,6 +458,7 @@ export default function JobProfileDetailPage() {
                             value={profile.header.fullName}
                             onChange={(v: string) => updateProfile('header.fullName', v)}
                             placeholder="Your full name"
+                            isEditing={isEditing}
                         />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <InputField
@@ -465,18 +467,21 @@ export default function JobProfileDetailPage() {
                                 value={profile.header.contact.email}
                                 onChange={(v: string) => updateProfile('header.contact.email', v)}
                                 placeholder="your@email.com"
+                                isEditing={isEditing}
                             />
                             <InputField
                                 label="Phone"
                                 value={profile.header.contact.phone}
                                 onChange={(v: string) => updateProfile('header.contact.phone', v)}
                                 placeholder="+1 234 567 8900"
+                                isEditing={isEditing}
                             />
                             <InputField
                                 label="Location"
                                 value={profile.header.contact.location}
                                 onChange={(v: string) => updateProfile('header.contact.location', v)}
                                 placeholder="City, Country"
+                                isEditing={isEditing}
                             />
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -485,18 +490,21 @@ export default function JobProfileDetailPage() {
                                 value={profile.header.contact.links.linkedin}
                                 onChange={(v: string) => updateProfile('header.contact.links.linkedin', v)}
                                 placeholder="https://linkedin.com/in/..."
+                                isEditing={isEditing}
                             />
                             <InputField
                                 label="GitHub URL"
                                 value={profile.header.contact.links.github}
                                 onChange={(v: string) => updateProfile('header.contact.links.github', v)}
                                 placeholder="https://github.com/..."
+                                isEditing={isEditing}
                             />
                             <InputField
                                 label="LeetCode URL"
                                 value={profile.header.contact.links.leetcode}
                                 onChange={(v: string) => updateProfile('header.contact.links.leetcode', v)}
                                 placeholder="https://leetcode.com/..."
+                                isEditing={isEditing}
                             />
                         </div>
                     </div>
@@ -513,6 +521,7 @@ export default function JobProfileDetailPage() {
                         onChange={(v: string) => updateProfile('professionalSummary', v)}
                         placeholder="Write a compelling professional summary..."
                         rows={5}
+                        isEditing={isEditing}
                     />
                 )}
             </GlassCard>
@@ -527,24 +536,28 @@ export default function JobProfileDetailPage() {
                             value={profile.education.degree}
                             onChange={(v: string) => updateProfile('education.degree', v)}
                             placeholder="Bachelor of Technology"
+                            isEditing={isEditing}
                         />
                         <InputField
                             label="Institution"
                             value={profile.education.institution}
                             onChange={(v: string) => updateProfile('education.institution', v)}
                             placeholder="University Name"
+                            isEditing={isEditing}
                         />
                         <InputField
                             label="Start Date"
                             value={profile.education.duration.start}
                             onChange={(v: string) => updateProfile('education.duration.start', v)}
                             placeholder="Jul 2019"
+                            isEditing={isEditing}
                         />
                         <InputField
                             label="End Date"
                             value={profile.education.duration.end}
                             onChange={(v: string) => updateProfile('education.duration.end', v)}
                             placeholder="Jun 2023"
+                            isEditing={isEditing}
                         />
                     </div>
                 )}
@@ -561,6 +574,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.programmingLanguages', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.programmingLanguages', i)}
                             placeholder="Add language..."
+                            isEditing={isEditing}
                         />
                         <TagInput
                             label="Frontend Technologies"
@@ -568,6 +582,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.frontend', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.frontend', i)}
                             placeholder="Add technology..."
+                            isEditing={isEditing}
                         />
                         <TagInput
                             label="Performance & Testing"
@@ -575,6 +590,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.performanceAndTesting', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.performanceAndTesting', i)}
                             placeholder="Add skill..."
+                            isEditing={isEditing}
                         />
                         <TagInput
                             label="Backend & Databases"
@@ -582,6 +598,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.backendAndDatabases', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.backendAndDatabases', i)}
                             placeholder="Add technology..."
+                            isEditing={isEditing}
                         />
                         <TagInput
                             label="DevOps & Tools"
@@ -589,6 +606,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.devOpsAndTools', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.devOpsAndTools', i)}
                             placeholder="Add tool..."
+                            isEditing={isEditing}
                         />
                         <TagInput
                             label="Architecture & Middleware"
@@ -596,6 +614,7 @@ export default function JobProfileDetailPage() {
                             onAdd={(v: string) => addArrayItem('technicalSkills.architectureAndMiddleware', v)}
                             onRemove={(i: number) => removeArrayItem('technicalSkills.architectureAndMiddleware', i)}
                             placeholder="Add skill..."
+                            isEditing={isEditing}
                         />
                     </div>
                 )}
@@ -638,36 +657,42 @@ export default function JobProfileDetailPage() {
                                         value={exp.role}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.role`, v)}
                                         placeholder="Software Developer"
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="Company"
                                         value={exp.company}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.company`, v)}
                                         placeholder="Company Name"
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="Employment Type"
                                         value={exp.employmentType}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.employmentType`, v)}
                                         placeholder="Full-time"
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="Location"
                                         value={exp.location}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.location`, v)}
                                         placeholder="Remote"
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="Start Date"
                                         value={exp.duration.start}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.duration.start`, v)}
                                         placeholder="Feb 2024"
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="End Date"
                                         value={exp.duration.end}
                                         onChange={(v: string) => updateProfile(`experience.${expIndex}.duration.end`, v)}
                                         placeholder="Present"
+                                        isEditing={isEditing}
                                     />
                                 </div>
                                 <TagInput
@@ -676,6 +701,7 @@ export default function JobProfileDetailPage() {
                                     onAdd={(v: string) => addArrayItem(`experience.${expIndex}.technologies`, v)}
                                     onRemove={(i: number) => removeArrayItem(`experience.${expIndex}.technologies`, i)}
                                     placeholder="Add technology..."
+                                    isEditing={isEditing}
                                 />
                                 <div className="space-y-2">
                                     <label className="text-sm text-gray-400">Responsibilities & Achievements</label>
@@ -757,6 +783,7 @@ export default function JobProfileDetailPage() {
                                     value={project.title}
                                     onChange={(v: string) => updateProfile(`projects.${projIndex}.title`, v)}
                                     placeholder="Project Name"
+                                    isEditing={isEditing}
                                 />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <InputField
@@ -764,12 +791,14 @@ export default function JobProfileDetailPage() {
                                         value={project.links.github}
                                         onChange={(v: string) => updateProfile(`projects.${projIndex}.links.github`, v)}
                                         placeholder="https://github.com/..."
+                                        isEditing={isEditing}
                                     />
                                     <InputField
                                         label="Live URL"
                                         value={project.links.live}
                                         onChange={(v: string) => updateProfile(`projects.${projIndex}.links.live`, v)}
                                         placeholder="https://..."
+                                        isEditing={isEditing}
                                     />
                                 </div>
                                 <TagInput
@@ -778,6 +807,7 @@ export default function JobProfileDetailPage() {
                                     onAdd={(v: string) => addArrayItem(`projects.${projIndex}.technologyStack`, v)}
                                     onRemove={(i: number) => removeArrayItem(`projects.${projIndex}.technologyStack`, i)}
                                     placeholder="Add technology..."
+                                    isEditing={isEditing}
                                 />
                                 <div className="space-y-2">
                                     <label className="text-sm text-gray-400">Description Points</label>
