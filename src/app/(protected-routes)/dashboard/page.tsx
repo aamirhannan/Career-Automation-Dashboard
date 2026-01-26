@@ -11,7 +11,7 @@ import NoDataFallback from '@/components/ui/NoDataFallback';
 import { useEffect, useState, useCallback } from 'react';
 import { DashboardService } from '@/services/dashboardService';
 import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog, HeatmapDataPoint } from '@/lib/types';
-import { startOfDay, endOfDay } from 'date-fns';
+import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Switch, FormControlLabel } from '@mui/material';
 
 export default function DashboardPage() {
@@ -25,8 +25,11 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [showMockData, setShowMockData] = useState(false);
 
-    // Filters
-    const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>(null);
+    // Filters - Default to last 7 days
+    const [dateRange, setDateRange] = useState<{ startDate: Date; endDate: Date } | null>({
+        startDate: subDays(new Date(), 7),
+        endDate: new Date()
+    });
 
     const fetchData = useCallback(async () => {
         // If showing mock data, do not fetch real data. 
@@ -35,10 +38,16 @@ export default function DashboardPage() {
 
         setLoading(true);
         try {
-            const range = dateRange ? {
-                startDate: startOfDay(dateRange.startDate),
-                endDate: endOfDay(dateRange.endDate)
-            } : undefined;
+            // Always use a range, defaulting to 7 days if state is somehow null (though initialized)
+            const currentRange = dateRange || {
+                startDate: subDays(new Date(), 7),
+                endDate: new Date()
+            };
+
+            const range = {
+                startDate: startOfDay(currentRange.startDate),
+                endDate: endOfDay(currentRange.endDate)
+            };
 
             const [
                 fetchedMetrics,
@@ -47,11 +56,11 @@ export default function DashboardPage() {
                 fetchedHeatmap,
                 fetchedActivity
             ] = await Promise.all([
-                DashboardService.getMetrics(range?.startDate, range?.endDate),
-                DashboardService.getRoleDistribution(range?.startDate, range?.endDate),
-                DashboardService.getDailyVelocity(range?.startDate, range?.endDate),
-                DashboardService.getHeatmap(range?.startDate, range?.endDate),
-                DashboardService.getRecentActivity()
+                DashboardService.getMetrics(range.startDate, range.endDate),
+                DashboardService.getRoleDistribution(range.startDate, range.endDate),
+                DashboardService.getDailyVelocity(range.startDate, range.endDate),
+                DashboardService.getHeatmap(range.startDate, range.endDate),
+                DashboardService.getRecentActivity() // Activity typically shows latest regardless, but can accept range if backend supports
             ]);
 
             setMetrics(fetchedMetrics);

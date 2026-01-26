@@ -1,6 +1,6 @@
 
 import api from '@/lib/axios';
-import { MetricItem, RoleDistributionDataPoint, DailyEmailDataPoint, HeatmapDataPoint, ActivityLog } from '@/lib/types';
+import { MetricItem, RoleDistributionDataPoint, DailyEmailDataPoint, HeatmapDataPoint, ActivityLog, JobRole } from '@/lib/types';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 
 export interface DashboardMetrics {
@@ -62,9 +62,15 @@ export const DashboardService = {
 
   async getDailyVelocity(startDate?: Date, endDate?: Date): Promise<DailyEmailDataPoint[]> {
     const params = { startDate: startDate?.toISOString(), endDate: endDate?.toISOString() };
-    // Backend returns array of { date: string, [Role]: count }
+    // Backend returns array of { date: string, [Role]: count } where Role is like 'FRONTEND', 'BACKEND'
     const { data } = await api.get<any[]>('/dashboard/charts/daily-velocity', { params });
-    return data;
+    
+    return data.map((item) => ({
+      date: item.date,
+      [JobRole.Frontend]: item.FRONTEND || 0,
+      [JobRole.Backend]: item.BACKEND || 0,
+      [JobRole.Fullstack]: item.FULLSTACK || 0,
+    }));
   },
 
   async getHeatmap(startDate?: Date, endDate?: Date): Promise<HeatmapDataPoint[]> {
