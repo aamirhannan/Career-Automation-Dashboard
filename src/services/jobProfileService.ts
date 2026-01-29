@@ -136,10 +136,37 @@ export const JobProfileService = {
      * Get profile names for dropdown (lightweight)
      */
     async getProfilesForDropdown(): Promise<{ id: string; profileName: string }[]> {
-        const { data } = await api.get<BackendProfileCard[]>('/job-profile/dropdown');
+        const { data } = await api.get<any[]>('/job-profile/dropdown');
         return (data || []).map(profile => ({
             id: profile.id,
             profileName: profile.profileType
         }));
+    },
+
+    /**
+     * Parse resume from PDF file
+     * 1. Uploads PDF to extract text
+     * 2. Converts text to profile structure
+     */
+    async parseResume(file: File): Promise<CreateJobProfilePayload> {
+        const formData = new FormData();
+        formData.append('resume', file);
+
+        // 1. Extract text
+        const { data: { text } } = await api.post<{ text: string }>('/resume-parser/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        // 2. Convert to profile
+        const { data } = await api.post<any>('/resume-parser/convert', { text });
+
+        // Map backend response to CreateJobProfilePayload
+        // The LLM returns profileType, but frontend expects profileName
+        return {
+            ...data,
+            profileName: data.profileType || 'Imported Profile'
+        };
     }
 };

@@ -16,7 +16,7 @@ const geistMono = localFont({
 import { Providers } from "@/components/providers/Providers";
 
 export const metadata: Metadata = {
-  title: "AutoApply",
+  title: "CareerOS | Intelligent Job Hunting",
   description: "Automated Job Application Dashboard",
 };
 

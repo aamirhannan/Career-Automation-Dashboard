@@ -15,8 +15,9 @@ import {
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import ApplicationEditorModal from '@/components/email/ApplicationEditorModal';
 import { EmailService } from '@/services/emailService';
+import { JobProfileService } from '@/services/jobProfileService';
 import { useSnackbar } from '@/context/SnackbarContext';
-import { JOB_ROLE_OPTIONS, JOB_ROLE_MATCHERS } from '@/lib/constants';
+import { JOB_ROLE_MATCHERS } from '@/lib/constants';
 import ResumeRender from '@/components/resume/ResumeRender';
 
 // --- Types ---
@@ -89,11 +90,19 @@ const darkTheme = createTheme({
     },
 });
 
+// Type for dropdown options
+interface JobRoleOption {
+    value: string;
+    label: string;
+}
+
 export default function EmailAgentPage() {
     const [activeTab, setActiveTab] = useState(0);
     const [drafts, setDrafts] = useState<ClientEmailDraft[]>([]);
     const [history, setHistory] = useState<SentEmail[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [jobRoleOptions, setJobRoleOptions] = useState<JobRoleOption[]>([]);
+    const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
     const { showSnackbar } = useSnackbar();
 
     useEffect(() => {
@@ -156,6 +165,33 @@ export default function EmailAgentPage() {
             clearInterval(interval);
         };
     }, []);
+
+    // Fetch job profiles for dropdown
+    useEffect(() => {
+        const fetchJobProfiles = async () => {
+            try {
+                const profiles = await JobProfileService.getAllProfiles();
+                const options: JobRoleOption[] = profiles.map(profile => ({
+                    value: profile.id,
+                    label: profile.profileName
+                }));
+                setJobRoleOptions(options);
+            } catch (error) {
+                console.error('Failed to fetch job profiles:', error);
+                showSnackbar('Failed to load job profiles', 'error');
+            } finally {
+                setIsLoadingProfiles(false);
+            }
+        };
+
+        fetchJobProfiles();
+    }, [showSnackbar]);
+
+    // Helper function to get role label from ID
+    const getRoleLabel = (roleId: string): string => {
+        const option = jobRoleOptions.find(opt => opt.value === roleId);
+        return option?.label || roleId; // Fallback to ID if not found
+    };
 
     // Form State
     const [role, setRole] = useState('');
@@ -375,11 +411,17 @@ export default function EmailAgentPage() {
                                                 }
                                             }}
                                         >
-                                            {JOB_ROLE_OPTIONS.map((option) => (
-                                                <MenuItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </MenuItem>
-                                            ))}
+                                            {isLoadingProfiles ? (
+                                                <MenuItem disabled>Loading profiles...</MenuItem>
+                                            ) : jobRoleOptions.length === 0 ? (
+                                                <MenuItem disabled>No profiles found</MenuItem>
+                                            ) : (
+                                                jobRoleOptions.map((option) => (
+                                                    <MenuItem key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </MenuItem>
+                                                ))
+                                            )}
                                         </Select>
                                     </FormControl>
                                     <TextField
@@ -451,7 +493,7 @@ export default function EmailAgentPage() {
                                             <CardContent className="p-6">
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div>
-                                                        <h4 className="text-lg font-bold text-white">{draft.role}</h4>
+                                                        <h4 className="text-lg font-bold text-white">{getRoleLabel(draft.role)}</h4>
                                                         <p className="text-sm text-gray-400 font-mono mt-1 flex items-center gap-1">
                                                             <Mail size={12} /> {draft.targetEmail}
                                                         </p>
@@ -543,7 +585,7 @@ export default function EmailAgentPage() {
                                     <tr key={item.id} className="hover:bg-white/5 transition-colors">
                                         <td className="p-4">
                                             <div className="font-bold text-white text-base">{item.company || 'Unknown Company'}</div>
-                                            <div className="text-gray-400 text-sm mt-0.5">{item.role}</div>
+                                            <div className="text-gray-400 text-sm mt-0.5">{getRoleLabel(item.role)}</div>
                                         </td>
                                         <td className="p-4 text-gray-400 font-mono text-sm">{item.recipient}</td>
                                         <td className="p-4 text-gray-400 text-sm">{item.sentAt}</td>
@@ -650,7 +692,7 @@ export default function EmailAgentPage() {
                                 </h3>
                                 {selectedHistoryItem && (
                                     <p className="text-sm text-gray-400 mt-1">
-                                        {selectedHistoryItem.role} • {selectedHistoryItem.recipient}
+                                        {getRoleLabel(selectedHistoryItem.role)} • {selectedHistoryItem.recipient}
                                     </p>
                                 )}
                             </div>
@@ -729,7 +771,7 @@ export default function EmailAgentPage() {
                         </div>
                     </div>
                 </Drawer>
-            </div>
-        </ThemeProvider>
+            </div >
+        </ThemeProvider >
     );
 }

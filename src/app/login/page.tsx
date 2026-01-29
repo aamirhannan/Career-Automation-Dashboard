@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/client';
 import { Button, Divider } from '@mui/material';
 
 import Link from 'next/link';
-import { CheckCircle2, Mail, FileText, Send, Zap, ArrowRight, LayoutDashboard as DashboardIcon, Briefcase } from 'lucide-react';
+import { CheckCircle2, Mail, FileText, Send, Zap, ArrowRight, LayoutDashboard as DashboardIcon, Briefcase, Layers } from 'lucide-react';
 
 export default function LoginPage() {
     const handleGoogleLogin = async () => {
@@ -29,16 +29,16 @@ export default function LoginPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-12">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-default to-secondary-default flex items-center justify-center">
-                            <Send size={18} className="text-white" />
+                            <Layers size={18} className="text-white" />
                         </div>
-                        <span className="text-xl font-bold font-sans tracking-tight">AutoApply</span>
+                        <span className="text-xl font-bold font-sans tracking-tight">CareerOS</span>
                     </div>
                 </div>
 
                 {/* Main Content */}
                 <div className="w-full max-w-md mx-auto">
                     <h1 className="text-4xl font-bold mb-3 tracking-tight">
-                        Welcome to AutoApply
+                        Welcome to CareerOS
                     </h1>
                     <p className="text-gray-400 mb-10 text-lg">
                         Sign in or create an account instantly with Google.
@@ -119,7 +119,7 @@ export default function LoginPage() {
 
                 {/* Footer */}
                 <div className="text-xs text-gray-600 flex justify-between">
-                    <span>© 2026 AutoApply Inc.</span>
+                    <span>© 2026 CareerOS Inc.</span>
                     <div className="flex gap-4">
                         <span className="cursor-pointer hover:text-gray-400">Privacy Policy</span>
                         <span className="cursor-pointer hover:text-gray-400">Terms of Service</span>

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NAV_ITEMS } from '@/lib/constants';
-import { LayoutDashboard, FileText, Settings, BarChart, Mail, Users, List, Briefcase } from 'lucide-react';
+import { LayoutDashboard, FileText, Settings, BarChart, Mail, Users, List, Briefcase, Layers } from 'lucide-react';
 
 export default function Sidebar() {
     const pathname = usePathname();
@@ -32,10 +32,10 @@ export default function Sidebar() {
     return (
         <aside className="w-64 fixed inset-y-0 left-0 z-50 bg-dark-900 border-r border-white/5 hidden lg:flex flex-col">
             <div className="h-16 flex items-center px-6 border-b border-white/5">
-                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-3">
-                    <div className="w-4 h-4 rounded-full bg-primary shadow-[0_0_10px_rgba(124,58,237,0.8)]" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center mr-3 shadow-lg shadow-purple-500/20">
+                    <Layers size={18} className="text-white" />
                 </div>
-                <span className="text-lg font-bold tracking-wider text-white">AUTO<span className="text-primary">APPLY</span></span>
+                <span className="text-lg font-bold tracking-wider text-white">Career<span className="text-primary">OS</span></span>
             </div>
 
             <nav className="flex-1 px-4 py-8 space-y-1">

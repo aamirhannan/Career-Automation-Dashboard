@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GlassCard from '@/components/ui/GlassCard';
 import { Button } from '@mui/material';
-import { FileText, Wand2 } from 'lucide-react';
-import { JOB_ROLE_OPTIONS } from '@/lib/constants';
+import { FileText, Wand2, Loader2 } from 'lucide-react';
+import { JobProfileService } from '@/services/jobProfileService';
+
+// Type for dropdown options
+interface ProfileOption {
+    value: string;
+    label: string;
+}
 
 interface ResumeControlPanelProps {
     onGenerate: (profile: string, jobDescription: string) => void;
@@ -10,11 +16,37 @@ interface ResumeControlPanelProps {
 }
 
 export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeControlPanelProps) {
-    const [selectedProfile, setSelectedProfile] = useState(JOB_ROLE_OPTIONS[0].value);
+    const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
+    const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
+    const [selectedProfile, setSelectedProfile] = useState('');
     const [jobDescription, setJobDescription] = useState('');
 
+    // Fetch job profiles on mount
+    useEffect(() => {
+        const fetchJobProfiles = async () => {
+            try {
+                const profiles = await JobProfileService.getAllProfiles();
+                const options: ProfileOption[] = profiles.map(profile => ({
+                    value: profile.id,
+                    label: profile.profileName
+                }));
+                setProfileOptions(options);
+                // Set default selection to first profile if available
+                if (options.length > 0) {
+                    setSelectedProfile(options[0].value);
+                }
+            } catch (error) {
+                console.error('Failed to fetch job profiles:', error);
+            } finally {
+                setIsLoadingProfiles(false);
+            }
+        };
+
+        fetchJobProfiles();
+    }, []);
+
     const handleGenerate = () => {
-        if (!jobDescription.trim()) return;
+        if (!jobDescription.trim() || !selectedProfile) return;
         onGenerate(selectedProfile, jobDescription);
     };
 
@@ -37,16 +69,29 @@ export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeC
                     <select
                         value={selectedProfile}
                         onChange={(e) => setSelectedProfile(e.target.value)}
-                        className="w-full bg-dark-900/50 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer"
+                        disabled={isLoadingProfiles}
+                        className="w-full bg-dark-900/50 border border-white/10 rounded-xl px-4 py-3 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {JOB_ROLE_OPTIONS.map((profile) => (
-                            <option key={profile.value} value={profile.value} className="bg-gray-900 text-white">
-                                {profile.label}
-                            </option>
-                        ))}
+                        {isLoadingProfiles ? (
+                            <option value="" className="bg-gray-900 text-white">Loading profiles...</option>
+                        ) : profileOptions.length === 0 ? (
+                            <option value="" className="bg-gray-900 text-white">No profiles found</option>
+                        ) : (
+                            profileOptions.map((profile) => (
+                                <option key={profile.value} value={profile.value} className="bg-gray-900 text-white">
+                                    {profile.label}
+                                </option>
+                            ))
+                        )}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                        {isLoadingProfiles ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        )}
                     </div>
                 </div>
             </div>
@@ -65,7 +110,7 @@ export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeC
             {/* Action Button */}
             <Button
                 onClick={handleGenerate}
-                disabled={isGenerating || !jobDescription.trim()}
+                disabled={isGenerating || !jobDescription.trim() || !selectedProfile}
                 variant="contained"
                 startIcon={!isGenerating && <Wand2 size={18} />}
                 className="w-full py-3 rounded-xl font-semibold shadow-lg shadow-purple-900/20"
@@ -82,3 +127,4 @@ export default function ResumeControlPanel({ onGenerate, isGenerating }: ResumeC
         </GlassCard>
     );
 }
+

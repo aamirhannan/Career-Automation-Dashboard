@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 ) : (
                     <NoDataFallback message="No recent activity">
                         <div className="w-full h-full pointer-events-none">
-                            <RecentActivityTable data={MOCK_ACTIVITY} />
+                            <RecentActivityTable data={[]} />
                         </div>
                     </NoDataFallback>
                 )}
