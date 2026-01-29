@@ -1,46 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ResumeControlPanel from '@/components/resume/ResumeControlPanel';
 import ResumePreviewPanel from '@/components/resume/ResumePreviewPanel';
 import ResumeHistoryTable, { ResumeLog } from '@/components/resume/ResumeHistoryTable';
 import ResumeEditorModal from '@/components/resume/ResumeEditorModal';
-import { ApplicationStatus } from '@/lib/types';
-import { Drawer, IconButton, Divider, Button } from '@mui/material';
+import ResumeRender, { ResumeData } from '@/components/resume/ResumeRender';
+import { ApplicationStatus, ResumeStatus } from '@/lib/types';
+import { Drawer, IconButton, Divider, Button, CircularProgress } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
+import { generateResumePDF, getResumes, downloadResumePDF, updateResume } from '@/services/resumeService';
+import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
-const MOCK_HISTORY: ResumeLog[] = [
-    {
-        id: '1',
-        generatedAt: 'Oct 24, 2023',
-        company: 'Google',
-        role: 'Frontend Engineer',
-        status: ApplicationStatus.Success,
-        matchScore: 92
-    },
-    {
-        id: '2',
-        generatedAt: 'Oct 22, 2023',
-        company: 'Netflix',
-        role: 'Senior UI Developer',
-        status: ApplicationStatus.Failed,
-        matchScore: 0
-    }
-];
+// const MOCK_HISTORY: ResumeLog[] = [
+//     {
+//         id: '1',
+//         generatedAt: 'Oct 24, 2023',
+//         company: 'Google',
+//         role: 'Frontend Engineer',
+//         status: ApplicationStatus.Success,
+//         matchScore: 92
+//     },
+//     {
+//         id: '2',
+//         generatedAt: 'Oct 22, 2023',
+//         company: 'Netflix',
+//         role: 'Senior UI Developer',
+//         status: ApplicationStatus.Failed,
+//         matchScore: 0
+//     }
+// ];
 
 // Mock data content for the editor
+// Mock data content for the editor matched to ResumeData structure
 const MOCK_RESUME_CONTENT = {
-    name: "Alex Roberts",
-    email: "alex.roberts@example.com",
-    phone: "(555) 123-4567",
-    location: "San Francisco, CA",
-    summary: "Highly skilled Frontend Engineer with 5+ years of experience building scalable web applications. Proven track record in optimizing performance and delivering high-quality user experiences. Tailored specifically for Target Company, with a focus on modern stack technologies.",
+    header: {
+        fullName: "Alex Roberts",
+        contact: {
+            email: "alex.roberts@example.com",
+            phone: "(555) 123-4567",
+            location: "San Francisco, CA",
+            links: {
+                linkedin: "linkedin.com/in/alexr",
+                github: "github.com/alexr"
+            }
+        }
+    },
+    professionalSummary: "Highly skilled Frontend Engineer with 5+ years of experience building scalable web applications. Proven track record in optimizing performance and delivering high-quality user experiences. Tailored specifically for Target Company, with a focus on modern stack technologies.",
     experience: [
         {
             role: "Senior Software Engineer",
             company: "TechCorp Inc.",
-            period: "2021 - Present",
-            points: [
+            duration: { start: "2021", end: "Present" },
+            responsibilitiesAndAchievements: [
                 "Led the migration of legacy monolith to microservices, reducing deployment time by 40%.",
                 "Mentored generic junior developers and established code review standards.",
                 "Implemented real-time features using WebSockets, increasing user engagement by 25%."
@@ -49,18 +61,51 @@ const MOCK_RESUME_CONTENT = {
         {
             role: "Software Developer",
             company: "Startup X",
-            period: "2018 - 2021",
-            points: [
+            duration: { start: "2018", end: "2021" },
+            responsibilitiesAndAchievements: [
                 "Built the MVP for the core product using React and Firebase.",
                 "Collaborated with designers to implement pixel-perfect UIs."
             ]
         }
-    ]
+    ],
+    technicalSkills: {
+        "Languages": ["JavaScript", "TypeScript", "Python"],
+        "Frameworks": ["React", "Next.js", "Express"]
+    },
+    education: {
+        degree: "B.S. Computer Science",
+        institution: "University of Technology",
+        duration: { start: "2014", end: "2018" }
+    },
+    projects: []
 };
 
 export default function ResumeBuilderPage() {
     const [status, setStatus] = useState<'IDLE' | 'PROCESSING' | 'GENERATION' | 'SUCCESS' | 'FAILED'>('IDLE');
-    const [history, setHistory] = useState<ResumeLog[]>(MOCK_HISTORY);
+    const [history, setHistory] = useState<ResumeLog[]>([]);
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const data = await getResumes();
+                // Map API response to ResumeLog interface
+                const mappedHistory: ResumeLog[] = data.map((item: any) => ({
+                    id: item.id,
+                    generatedAt: new Date(item.createdAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
+                    company: '',
+                    role: item.role,
+                    status: item.status,
+                    matchScore: 0,
+                    newResumeContent: item.newResumeContent,
+                }));
+                setHistory(mappedHistory);
+            } catch (error) {
+                console.error("Failed to load resume history", error);
+            }
+        };
+
+        fetchHistory();
+    }, []);
     const [currentScore, setCurrentScore] = useState(0);
     const [addedKeywords, setAddedKeywords] = useState<string[]>([]);
 
@@ -72,33 +117,61 @@ export default function ResumeBuilderPage() {
     const [isEditorOpen, setIsEditorOpen] = useState(false);
     const [editorData, setEditorData] = useState<any>(MOCK_RESUME_CONTENT);
 
+    // Async Action States
+    const [isSaving, setIsSaving] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
     const handleGenerate = async (profile: string, jobDescription: string) => {
-        // Mocking the generation pipeline
-        setStatus('PROCESSING');
+        try {
+            setStatus('PROCESSING');
 
-        // 1. Analyze (Mock delay)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setStatus('GENERATION');
+            // 1. Analyze (Mock delay - typically this might be a separate step or part of the generation)
+            // Keeping a small delay for UI feedback if needed, or remove.
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            setStatus('GENERATION');
 
-        // 2. Generate (Mock delay)
-        await new Promise(resolve => setTimeout(resolve, 2500));
+            // 2. Call API to generate content - The backend creates the record
+            const result = await generateResumePDF(profile, jobDescription);
 
-        // 3. Success
-        setStatus('SUCCESS');
-        setCurrentScore(88); // Mock score
-        setAddedKeywords(['React Optimization', 'Micro-frontends', 'System Design', 'CI/CD Pipelines']); // Mock keywords
+            // 3. Need to fetch the latest resume to get the generated content ID and data
+            // Since the generation API returns PDF blob but saves to DB, we fetch history to get the latest record
+            const freshHistory = await getResumes();
+            const mappedHistory: ResumeLog[] = freshHistory.map((item: any) => ({
+                id: item.id,
+                generatedAt: new Date(item.createdAt).toLocaleString('en-IN', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }),
+                company: '',
+                role: item.role,
+                status: item.status,
+                matchScore: 0,
+                newResumeContent: item.newResumeContent,
+            }));
 
-        // Add to history
-        const newLog: ResumeLog = {
-            id: Date.now().toString(),
-            generatedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            company: 'Target Company', // Ideally extracted from JD
-            role: profile === 'frontend' ? 'Frontend Engineer' : 'Fullstack Developer',
-            status: ApplicationStatus.Success,
-            matchScore: 88,
-        };
+            setHistory(mappedHistory);
 
-        setHistory(prev => [newLog, ...prev]);
+            // 4. Success
+            setStatus('SUCCESS');
+            setCurrentScore(88); // Mock score 
+            setAddedKeywords(['Optimized based on JD']); // Mock keywords
+
+            // Select the latest resume (first in current sorted list implied, or find matching one)
+            // Assuming the API returns sorted by latest, or we check the one we just created
+            // For simplicity, we take the most recent one which should be the one just generated
+            if (mappedHistory.length > 0) {
+                const latestResume = mappedHistory[0];
+                setSelectedResume(latestResume);
+                console.log("Auto-selected latest resume for preview:", latestResume.id);
+            }
+
+            // Note: The previous logic downloaded the PDF immediately. 
+            // The user now wants live preview logic first, download is separate action.
+            // We removed the immediate blob download here as per request "show the pdf in live preview".
+
+            console.log('Generation completed.');
+
+        } catch (error) {
+            console.error('Generation failed:', error);
+            setStatus('FAILED');
+        }
     };
 
     const handleViewResume = (log: ResumeLog) => {
@@ -106,26 +179,73 @@ export default function ResumeBuilderPage() {
         setIsDrawerOpen(true);
     };
 
-    const handleDownloadResume = (log: ResumeLog) => {
-        console.log(`Downloading resume for ${log.company}`);
-        // Simulate download
-        const link = document.createElement('a');
-        link.href = '#'; // In real app, this would be a blob URL
-        link.download = `Resume_${log.company}_${log.role}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleDownloadResume = async (log: ResumeLog) => {
+        if (!log.newResumeContent) {
+            console.error("No content to download for this resume");
+            return;
+        }
+
+        try {
+            setDownloadingId(log.id);
+            await downloadResumePDF(log.newResumeContent, log.role);
+            console.log(`Downloaded resume for ${log.company}`);
+        } catch (error) {
+            console.error("Failed to download resume PDF", error);
+            // Optionally add a toast or alert here
+        } finally {
+            setDownloadingId(null);
+        }
     };
 
     const handleEditResume = () => {
-        // In a real app, we'd fetch the resume content here
+        if (selectedResume && selectedResume.newResumeContent) {
+            try {
+                const content = typeof selectedResume.newResumeContent === 'string'
+                    ? JSON.parse(selectedResume.newResumeContent)
+                    : selectedResume.newResumeContent;
+                setEditorData(content);
+            } catch (e) {
+                console.error("Failed to parse resume content", e);
+                setEditorData(MOCK_RESUME_CONTENT);
+            }
+        } else {
+            setEditorData(MOCK_RESUME_CONTENT);
+        }
         setIsEditorOpen(true);
     };
 
-    const handleSaveResume = (newData: any) => {
-        setEditorData(newData);
-        console.log("Saved new resume data:", newData);
-        // Here you would send update to backend
+    const handleSaveResume = async (newData: any) => {
+        if (!selectedResume) return;
+
+        try {
+            setIsSaving(true);
+            // Update UI state immediately for responsiveness (or wait for API)
+            setEditorData(newData);
+
+            // Call API to save changes
+            await updateResume(selectedResume.id, newData);
+
+            // Update local history state
+            const updatedHistory = history.map(item =>
+                item.id === selectedResume.id
+                    ? { ...item, newResumeContent: newData }
+                    : item
+            );
+            setHistory(updatedHistory);
+
+            // Update currently selected resume
+            setSelectedResume({ ...selectedResume, newResumeContent: newData });
+
+            console.log("Saved new resume data and updated state");
+            setIsEditorOpen(false);
+
+            // Optional: Show success feedback
+        } catch (error) {
+            console.error("Failed to save resume", error);
+            // Optional: Show error feedback
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -156,6 +276,9 @@ export default function ResumeBuilderPage() {
                         score={currentScore}
                         addedKeywords={addedKeywords}
                         onEdit={handleEditResume}
+                        resumeData={selectedResume?.newResumeContent}
+                        onDownload={() => selectedResume && handleDownloadResume(selectedResume)}
+                        isDownloading={selectedResume?.id === downloadingId}
                     />
                 </div>
             </div>
@@ -166,6 +289,8 @@ export default function ResumeBuilderPage() {
                     data={history}
                     onView={handleViewResume}
                     onDownload={handleDownloadResume}
+                    downloadingId={downloadingId}
+                    selectedId={selectedResume?.id}
                 />
             </div>
 
@@ -175,6 +300,7 @@ export default function ResumeBuilderPage() {
                 onClose={() => setIsEditorOpen(false)}
                 initialData={editorData}
                 onSave={handleSaveResume}
+                isSaving={isSaving}
             />
 
             {/* PDF Preview Drawer */}
@@ -209,7 +335,7 @@ export default function ResumeBuilderPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <IconButton
-                                onClick={() => { setIsDrawerOpen(false); handleEditResume(); }}
+                                onClick={handleEditResume}
                                 sx={{ color: '#94a3b8', '&:hover': { color: '#fff' } }}
                                 title="Edit Content"
                             >
@@ -218,11 +344,19 @@ export default function ResumeBuilderPage() {
                             <div className="h-6 w-[1px] bg-white/10 mx-1"></div>
                             <Button
                                 variant="contained"
-                                startIcon={<Download size={18} />}
+                                startIcon={selectedResume && downloadingId === selectedResume.id ? <CircularProgress size={18} color="inherit" /> : <Download size={18} />}
                                 onClick={() => selectedResume && handleDownloadResume(selectedResume)}
-                                sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' } }}
+                                disabled={!selectedResume || downloadingId === selectedResume.id}
+                                sx={{
+                                    bgcolor: '#7c3aed',
+                                    '&:hover': { bgcolor: '#6d28d9' },
+                                    '&.Mui-disabled': {
+                                        bgcolor: 'rgba(124, 58, 237, 0.5)',
+                                        color: 'rgba(255, 255, 255, 0.7)'
+                                    }
+                                }}
                             >
-                                Download PDF
+                                {selectedResume && downloadingId === selectedResume.id ? 'Downloading...' : 'Download PDF'}
                             </Button>
                             <IconButton onClick={() => setIsDrawerOpen(false)} sx={{ color: 'gray' }}>
                                 <X size={24} />
@@ -235,82 +369,20 @@ export default function ResumeBuilderPage() {
                         <div className="bg-white text-black max-w-[21cm] mx-auto min-h-[29.7cm] shadow-2xl p-12">
                             {/* Mock PDF Content */}
                             {selectedResume ? (
-                                <div className="space-y-6">
-                                    <div className="text-center border-b-2 border-gray-800 pb-6">
-                                        <h1 className="text-4xl font-bold uppercase tracking-widest text-[#2d3748]">Alex Roberts</h1>
-                                        <p className="text-sm text-gray-600 mt-2">alex.roberts@example.com | (555) 123-4567 | San Francisco, CA</p>
-                                        <p className="text-sm text-blue-600 mt-1">linkedin.com/in/alexr | github.com/alexr</p>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Professional Summary</h2>
-                                        <p className="text-sm leading-relaxed text-gray-700">
-                                            Highly skilled <strong>{selectedResume.role}</strong> with 5+ years of experience building scalable web applications.
-                                            Proven track record in optimizing performance and delivering high-quality user experiences.
-                                            Tailored specifically for <strong>{selectedResume.company}</strong>, with a focus on modern stack technologies.
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Key Skills</h2>
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-700">
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li>JavaScript (ES6+), TypeScript, React, Next.js</li>
-                                                <li>Node.js, Express, PostgreSQL, MongoDB</li>
-                                            </ul>
-                                            <ul className="list-disc pl-5 space-y-1">
-                                                <li>AWS, Docker, CI/CD Pipelines</li>
-                                                <li>System Design, Performance Optimization</li>
-                                            </ul>
+                                <div className="min-h-full">
+                                    {selectedResume.newResumeContent ? (
+                                        <ResumeRender
+                                            data={
+                                                typeof selectedResume.newResumeContent === 'string'
+                                                    ? JSON.parse(selectedResume.newResumeContent)
+                                                    : selectedResume.newResumeContent as unknown as ResumeData
+                                            }
+                                        />
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                                            <p>No resume content available for this entry.</p>
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Experience</h2>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <div className="flex justify-between items-baseline">
-                                                    <h3 className="font-bold text-gray-800">Senior Software Engineer</h3>
-                                                    <span className="text-sm text-gray-600">2021 - Present</span>
-                                                </div>
-                                                <p className="text-sm italic text-gray-600 mb-1">TechCorp Inc.</p>
-                                                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                                                    <li>Led the migration of legacy monolith to microservices, reducing deployment time by 40%.</li>
-                                                    <li>Mentored generic junior developers and established code review standards.</li>
-                                                    <li>Implemented real-time features using WebSockets, increasing user engagement by 25%.</li>
-                                                </ul>
-                                            </div>
-                                            <div>
-                                                <div className="flex justify-between items-baseline">
-                                                    <h3 className="font-bold text-gray-800">Software Developer</h3>
-                                                    <span className="text-sm text-gray-600">2018 - 2021</span>
-                                                </div>
-                                                <p className="text-sm italic text-gray-600 mb-1">Startup X</p>
-                                                <ul className="list-disc pl-5 text-sm space-y-1 text-gray-700">
-                                                    <li>Built the MVP for the core product using React and Firebase.</li>
-                                                    <li>Collaborated with designers to implement pixel-perfect UIs.</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h2 className="text-lg font-bold uppercase border-b border-gray-300 mb-3 text-[#2d3748]">Education</h2>
-                                        <div>
-                                            <div className="flex justify-between items-baseline">
-                                                <h3 className="font-bold text-gray-800">B.S. Computer Science</h3>
-                                                <span className="text-sm text-gray-600">2018</span>
-                                            </div>
-                                            <p className="text-sm text-gray-600">University of Technology</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-8 text-center">
-                                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                                            <CheckCircle2 size={12} />
-                                            ATS Optimized for {selectedResume.company}
-                                        </div>
-                                    </div>
+                                    )}
                                 </div>
                             ) : (
                                 <p>Loading...</p>

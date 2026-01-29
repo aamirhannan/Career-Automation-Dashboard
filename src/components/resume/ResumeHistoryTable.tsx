@@ -1,9 +1,9 @@
 import GlassCard from '@/components/ui/GlassCard';
 import SectionTitle from '@/components/ui/SectionTitle';
 import StatusBadge from '@/components/table/StatusBadge';
-import { Button, IconButton, Tooltip } from '@mui/material';
+import { Button, IconButton, Tooltip, CircularProgress } from '@mui/material';
 import { Download, Eye, FileText, MoreHorizontal } from 'lucide-react';
-import { ApplicationStatus } from '@/lib/types';
+import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 
 // Using a local interface for now, or could export from types.ts if we update it
 export interface ResumeLog {
@@ -11,17 +11,25 @@ export interface ResumeLog {
     generatedAt: string;
     company: string;
     role: string;
-    status: ApplicationStatus;
+    status: ResumeStatus;
     matchScore?: number;
+    newResumeContent?: string;
+    tokenUsage?: {
+        cost: string;
+        input: string;
+        output: string;
+    };
 }
 
 interface ResumeHistoryTableProps {
     data: ResumeLog[];
     onView?: (log: ResumeLog) => void;
     onDownload?: (log: ResumeLog) => void;
+    downloadingId?: string | null;
+    selectedId?: string | null;
 }
 
-export default function ResumeHistoryTable({ data, onView, onDownload }: ResumeHistoryTableProps) {
+export default function ResumeHistoryTable({ data, onView, onDownload, downloadingId, selectedId }: ResumeHistoryTableProps) {
     return (
         <div className="w-full">
             <SectionTitle
@@ -50,7 +58,10 @@ export default function ResumeHistoryTable({ data, onView, onDownload }: ResumeH
                                 </tr>
                             ) : (
                                 data.map((row) => (
-                                    <tr key={row.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+                                    <tr
+                                        key={row.id}
+                                        className={`border-b border-white/5 transition-colors group ${selectedId === row.id ? 'bg-purple-500/10 border-l-2 border-l-purple-500' : 'hover:bg-white/[0.02]'}`}
+                                    >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center">
@@ -86,9 +97,15 @@ export default function ResumeHistoryTable({ data, onView, onDownload }: ResumeH
                                                     </IconButton>
                                                 </Tooltip>
                                                 <Tooltip title="Download PDF">
-                                                    <IconButton size="small" onClick={() => onDownload?.(row)} sx={{ color: '#94a3b8', '&:hover': { color: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' } }}>
-                                                        <Download size={16} />
-                                                    </IconButton>
+                                                    <span>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => onDownload?.(row)}
+                                                            disabled={downloadingId === row.id}
+                                                            sx={{ color: '#94a3b8', '&:hover': { color: '#22c55e', bgcolor: 'rgba(34, 197, 94, 0.1)' } }}>
+                                                            {downloadingId === row.id ? <CircularProgress size={16} /> : <Download size={16} />}
+                                                        </IconButton>
+                                                    </span>
                                                 </Tooltip>
                                             </div>
                                         </td>
