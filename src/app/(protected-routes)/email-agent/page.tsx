@@ -19,6 +19,7 @@ import { JobProfileService } from '@/services/jobProfileService';
 import { useSnackbar } from '@/context/SnackbarContext';
 import { JOB_ROLE_MATCHERS } from '@/lib/constants';
 import ResumeRender from '@/components/resume/ResumeRender';
+import QuickSetupModal from '@/components/onboarding/QuickSetupModal';
 
 // --- Types ---
 interface ClientEmailDraft {
@@ -46,23 +47,6 @@ interface SentEmail {
     jobDescription: string;
     resumeContent: any;
 }
-
-// --- Mock Data ---
-const MOCK_RESUME_DATA = {
-    name: "Alex Roberts",
-    email: "alex.roberts@example.com",
-    phone: "(555) 123-4567",
-    location: "San Francisco, CA",
-    summary: "Experienced Frontend Developer specializing in React and Next.js ecosystem...",
-    experience: [
-        {
-            role: "Senior Frontend Engineer",
-            company: "TechCorp",
-            period: "2021-Present",
-            points: ["Led migration to Next.js", "Improved performance by 40%"]
-        }
-    ]
-};
 
 // --- Theme ---
 const darkTheme = createTheme({
@@ -104,6 +88,9 @@ export default function EmailAgentPage() {
     const [jobRoleOptions, setJobRoleOptions] = useState<JobRoleOption[]>([]);
     const [isLoadingProfiles, setIsLoadingProfiles] = useState(true);
     const { showSnackbar } = useSnackbar();
+
+    // Setup Modal State
+    const [isSetupOpen, setIsSetupOpen] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
@@ -185,7 +172,7 @@ export default function EmailAgentPage() {
         };
 
         fetchJobProfiles();
-    }, [showSnackbar]);
+    }, [showSnackbar, isSetupOpen]);
 
     // Helper function to get role label from ID
     const getRoleLabel = (roleId: string): string => {
@@ -225,6 +212,15 @@ export default function EmailAgentPage() {
                 setRole(key);
                 break;
             }
+        }
+    };
+
+    const handleRoleChange = (e: any) => {
+        const value = e.target.value;
+        if (value === 'CREATE_NEW') {
+            setIsSetupOpen(true);
+        } else {
+            setRole(value);
         }
     };
 
@@ -353,6 +349,9 @@ export default function EmailAgentPage() {
 
     return (
         <ThemeProvider theme={darkTheme}>
+            {/* Force modal open when triggered */}
+            {isSetupOpen && <QuickSetupModal forcefulOpen={true} onClose={() => setIsSetupOpen(false)} />}
+
             <div className="h-full flex flex-col space-y-6 pb-10">
                 {/* Header */}
                 <div>
@@ -389,7 +388,7 @@ export default function EmailAgentPage() {
                                             labelId="job-role-label"
                                             value={role}
                                             label="Job Role"
-                                            onChange={(e) => setRole(e.target.value)}
+                                            onChange={handleRoleChange}
                                             sx={{
                                                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.1)' },
@@ -413,14 +412,19 @@ export default function EmailAgentPage() {
                                         >
                                             {isLoadingProfiles ? (
                                                 <MenuItem disabled>Loading profiles...</MenuItem>
-                                            ) : jobRoleOptions.length === 0 ? (
-                                                <MenuItem disabled>No profiles found</MenuItem>
                                             ) : (
-                                                jobRoleOptions.map((option) => (
-                                                    <MenuItem key={option.value} value={option.value}>
-                                                        {option.label}
+                                                [
+                                                    ...(jobRoleOptions.length === 0 ? [<MenuItem key="none" disabled>No profiles found</MenuItem>] : []),
+                                                    ...jobRoleOptions.map((option) => (
+                                                        <MenuItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </MenuItem>
+                                                    )),
+                                                    <Divider key="divider" light />,
+                                                    <MenuItem key="create_new" value="CREATE_NEW" sx={{ color: '#a78bfa !important', fontWeight: 'bold' }}>
+                                                        + Create New Profile
                                                     </MenuItem>
-                                                ))
+                                                ]
                                             )}
                                         </Select>
                                     </FormControl>
@@ -771,7 +775,7 @@ export default function EmailAgentPage() {
                         </div>
                     </div>
                 </Drawer>
-            </div >
-        </ThemeProvider >
+            </div>
+        </ThemeProvider>
     );
 }

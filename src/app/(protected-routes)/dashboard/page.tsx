@@ -14,6 +14,8 @@ import { MetricItem, DailyEmailDataPoint, RoleDistributionDataPoint, ActivityLog
 import { startOfDay, endOfDay, subDays } from 'date-fns';
 import { Switch, FormControlLabel } from '@mui/material';
 
+import QuickSetupModal from '@/components/onboarding/QuickSetupModal';
+
 export default function DashboardPage() {
     const [metrics, setMetrics] = useState<MetricItem[]>([]);
     const [dailyEmails, setDailyEmails] = useState<DailyEmailDataPoint[]>([]);
@@ -105,6 +107,7 @@ export default function DashboardPage() {
 
     return (
         <>
+            <QuickSetupModal />
             <div className="flex items-start justify-between mb-8">
                 <div>
                     <h1 className="text-2xl font-bold text-white mb-1">Dashboard</h1>
