@@ -164,12 +164,7 @@ export const MOCK_ACTIVITY: ActivityLog[] = [
   },
 ];
 
-export const JOB_ROLE_OPTIONS = [
-    { value: 'FRONTEND', label: 'FRONTEND' },
-    { value: 'BACKEND', label: 'BACKEND' },
-    { value: 'FULLSTACK', label: 'FULLSTACK' },
-    { value: 'SOFTWAREENGINEER', label: 'SOFTWAREENGINEER' },
-];
+
 
 export const JOB_ROLE_MATCHERS = [
     { key: 'FRONTEND', regex: /front[-\s]?end/i },

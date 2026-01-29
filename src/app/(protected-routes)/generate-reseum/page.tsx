@@ -10,7 +10,6 @@ import { ApplicationStatus, ResumeStatus } from '@/lib/types';
 import { Drawer, IconButton, Divider, Button, CircularProgress } from '@mui/material';
 import { X, Download, FileText, CheckCircle2, Pencil } from 'lucide-react';
 import { generateResumePDF, getResumes, downloadResumePDF, updateResume } from '@/services/resumeService';
-import { JOB_ROLE_OPTIONS } from '@/lib/constants';
 
 // const MOCK_HISTORY: ResumeLog[] = [
 //     {
