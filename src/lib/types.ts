@@ -51,7 +51,7 @@ export interface RoleDistributionDataPoint {
 export interface ActivityLog {
   id: string;
   company: string;
-  role: JobRole;
+  role: string;
   date: string;
   status: ApplicationStatus;
   type: OutreachType;
