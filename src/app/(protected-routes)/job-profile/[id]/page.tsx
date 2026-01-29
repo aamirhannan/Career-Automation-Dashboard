@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
     ArrowLeft,
@@ -24,7 +24,8 @@ import {
     Eye,
     EyeOff,
     PanelLeftClose,
-    PanelLeft
+    PanelLeft,
+    Upload
 } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
 import ResumeRender, { ResumeData } from '@/components/resume/ResumeRender';
@@ -232,9 +233,13 @@ export default function JobProfileDetailPage() {
     const profileId = params.id as string;
     const isNewProfile = profileId === 'new';
 
+    // File upload ref
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [profile, setProfile] = useState<JobProfile | CreateJobProfilePayload>(getEmptyProfile());
     const [isLoading, setIsLoading] = useState(!isNewProfile);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [isEditing, setIsEditing] = useState(isNewProfile);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
@@ -269,6 +274,31 @@ export default function JobProfileDetailPage() {
             router.push('/job-profile');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setIsUploading(true);
+            showSnackbar('Uploading and parsing resume...', 'info');
+            const data = await JobProfileService.parseResume(file);
+            // Merge with existing state if needed, or replace. Here we replace.
+            setProfile(prev => ({
+                ...prev,
+                ...data
+            }));
+            showSnackbar('Resume parsed successfully!', 'success');
+        } catch (error) {
+            console.error('Failed to parse resume:', error);
+            showSnackbar('Failed to parse resume', 'error');
+        } finally {
+            setIsUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
         }
     };
 
@@ -410,6 +440,31 @@ export default function JobProfileDetailPage() {
                         </div>
                     </div>
                     <div className="flex gap-3">
+                        {/* Resume Import Button */}
+                        {isNewProfile && (
+                            <>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleFileUpload}
+                                    className="hidden"
+                                    accept=".pdf"
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 text-blue-400 rounded-lg flex items-center gap-2 transition-all"
+                                >
+                                    {isUploading ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-blue-400"></div>
+                                    ) : (
+                                        <Upload size={16} />
+                                    )}
+                                    Import Resume
+                                </button>
+                            </>
+                        )}
+
                         {/* Preview Toggle Button - Show for existing profiles or when editing */}
                         {(isEditing || !isNewProfile) && (
                             <button
