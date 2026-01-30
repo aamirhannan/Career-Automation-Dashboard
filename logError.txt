@@ -1,0 +1,224 @@
+2026-01-30T07:15:47.807952581Z ==> Cloning from https://github.com/aamirhannan/Career-Automation-Dashboard
+2026-01-30T07:15:48.523968163Z ==> Checking out commit da715c86a8ce7524df16bbae5fd230ecaf692f47 in branch main
+2026-01-30T07:16:00.539348367Z ==> Using Node.js version 22.22.0 (default)
+2026-01-30T07:16:00.567990185Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2026-01-30T07:16:02.725685609Z ==> Running build command 'npm install; npm run build'...
+2026-01-30T07:16:27.165197625Z 
+2026-01-30T07:16:27.165227355Z added 512 packages, and audited 513 packages in 24s
+2026-01-30T07:16:27.165241626Z 
+2026-01-30T07:16:27.165247206Z 166 packages are looking for funding
+2026-01-30T07:16:27.165294807Z   run `npm fund` for details
+2026-01-30T07:16:27.257480087Z 
+2026-01-30T07:16:27.257511348Z 6 vulnerabilities (2 moderate, 4 high)
+2026-01-30T07:16:27.257517488Z 
+2026-01-30T07:16:27.257523648Z To address issues that do not require attention, run:
+2026-01-30T07:16:27.257529029Z   npm audit fix
+2026-01-30T07:16:27.257534218Z 
+2026-01-30T07:16:27.257539569Z To address all issues (including breaking changes), run:
+2026-01-30T07:16:27.257546069Z   npm audit fix --force
+2026-01-30T07:16:27.257550339Z 
+2026-01-30T07:16:27.257556019Z Run `npm audit` for details.
+2026-01-30T07:16:27.460602129Z 
+2026-01-30T07:16:27.46062529Z > resume-client@0.1.0 build
+2026-01-30T07:16:27.46062967Z > next build
+2026-01-30T07:16:27.46063325Z 
+2026-01-30T07:16:27.972179276Z ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-01-30T07:16:28.01974838Z   ▲ Next.js 14.2.35
+2026-01-30T07:16:28.019795421Z 
+2026-01-30T07:16:28.030026286Z    Creating an optimized production build ...
+2026-01-30T07:16:47.046928538Z <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (131kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+2026-01-30T07:17:02.12811115Z  ✓ Compiled successfully
+2026-01-30T07:17:02.128836236Z    Linting and checking validity of types ...
+2026-01-30T07:17:07.775265657Z 
+2026-01-30T07:17:07.775293948Z Failed to compile.
+2026-01-30T07:17:07.775314148Z 
+2026-01-30T07:17:07.775330029Z ./src/app/(protected-routes)/email-agent/page.tsx
+2026-01-30T07:17:07.775335839Z 7:13  Error: 'FormControlLabel' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775340239Z 11:11  Error: 'Plus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775344539Z 34:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775348489Z 48:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775352989Z 87:12  Error: 'isLoading' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775357379Z 130:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775361479Z 218:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775365439Z 327:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.77538434Z 493:43  Error: 'isInProgress' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77538713Z 
+2026-01-30T07:17:07.77538973Z ./src/app/(protected-routes)/founder-outreach/page.tsx
+2026-01-30T07:17:07.77539288Z 7:5  Error: 'InputAdornment' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77539579Z 7:21  Error: 'LinearProgress' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77539869Z 10:15  Error: 'Search' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77540144Z 11:12  Error: 'Trash2' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77540411Z 11:20  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77540687Z 12:19  Error: 'FileText' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775409611Z 13:20  Error: 'ArrowRight' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77541554Z 34:17  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775418371Z 148:39  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775421251Z 181:66  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775423831Z 275:53  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775426311Z 275:81  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775428901Z 318:83  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775431321Z 318:111  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775580844Z 
+2026-01-30T07:17:07.775585384Z ./src/app/(protected-routes)/generate-reseum/page.tsx
+2026-01-30T07:17:07.775588375Z 9:10  Error: 'ApplicationStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775591015Z 9:29  Error: 'ResumeStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775593635Z 10:30  Error: 'Divider' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775596325Z 11:33  Error: 'CheckCircle2' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775598995Z 91:68  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775601485Z 117:50  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775603905Z 133:19  Error: 'result' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775606605Z 138:72  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775608995Z 216:46  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775611325Z 
+2026-01-30T07:17:07.775613825Z ./src/app/(protected-routes)/job-profile/[id]/page.tsx
+2026-01-30T07:17:07.775617095Z 9:5  Error: 'Mail' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775620025Z 10:5  Error: 'Phone' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775623195Z 11:5  Error: 'MapPin' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775625925Z 12:13  Error: 'LinkIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775641306Z 23:5  Error: 'AlertCircle' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775644496Z 25:5  Error: 'EyeOff' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775647346Z 210:11  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775649806Z 244:12  Error: 'validationErrors' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775652956Z 264:8  Warning: React Hook useEffect has a missing dependency: 'fetchProfile'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+2026-01-30T07:17:07.775665336Z 351:49  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775668766Z 394:77  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775671266Z 400:77  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775674046Z 401:53  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775676737Z 406:82  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775678977Z 
+2026-01-30T07:17:07.775682347Z ./src/app/(protected-routes)/logs/page.tsx
+2026-01-30T07:17:07.775685157Z 3:10  Error: 'MOCK_LOGS' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775687467Z 
+2026-01-30T07:17:07.775690297Z ./src/app/login/page.tsx
+2026-01-30T07:17:07.775692787Z 4:10  Error: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775694867Z 4:18  Error: 'Divider' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775697037Z 6:8  Error: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775699117Z 7:40  Error: 'Send' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775701217Z 7:51  Error: 'ArrowRight' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775703257Z 7:82  Error: 'DashboardIcon' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775705207Z 
+2026-01-30T07:17:07.775709827Z ./src/components/charts/ApplicationHeatmap.tsx
+2026-01-30T07:17:07.775712147Z 51:51  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775714307Z 58:34  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775716218Z 
+2026-01-30T07:17:07.775718258Z ./src/components/charts/RoleDistributionDonut.tsx
+2026-01-30T07:17:07.775720638Z 29:39  Error: 'name' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775722568Z 
+2026-01-30T07:17:07.775724598Z ./src/components/email/ApplicationEditorModal.tsx
+2026-01-30T07:17:07.775726738Z 7:26  Error: 'InputAdornment' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775728888Z 7:53  Error: 'Box' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775731018Z 10:5  Error: 'X' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775733258Z 11:22  Error: 'MapPin' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775735698Z 11:36  Error: 'Phone' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775738188Z 65:13  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775746158Z 137:70  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775749148Z 158:58  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775751618Z 181:51  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775754478Z 349:84  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775756799Z 
+2026-01-30T07:17:07.775759939Z ./src/components/landing/Footer.tsx
+2026-01-30T07:17:07.775762648Z 70:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775764319Z 
+2026-01-30T07:17:07.775766049Z ./src/components/landing/LandingNavbar.tsx
+2026-01-30T07:17:07.775770069Z 5:29  Error: 'useTransform' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775771859Z 12:13  Error: 'scrollY' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775773449Z 
+2026-01-30T07:17:07.775775159Z ./src/components/landing/PricingSection.tsx
+2026-01-30T07:17:07.775776899Z 15:57  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775778509Z 
+2026-01-30T07:17:07.775780879Z ./src/components/layout/TopNav.tsx
+2026-01-30T07:17:07.775782629Z 3:24  Error: 'User' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775784399Z 4:22  Error: 'Avatar' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775785989Z 
+2026-01-30T07:17:07.775788579Z ./src/components/layout/UserProfile.tsx
+2026-01-30T07:17:07.775790399Z 5:34  Error: 'CreditCard' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775792189Z 7:8  Error: 'Link' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775793989Z 12:11  Error: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775795589Z 
+2026-01-30T07:17:07.775797329Z ./src/components/metrics/MetricCard.tsx
+2026-01-30T07:17:07.775799089Z 12:36  Error: 'id' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77580068Z 
+2026-01-30T07:17:07.775802429Z ./src/components/onboarding/QuickSetupModal.tsx
+2026-01-30T07:17:07.77580416Z 10:23  Error: 'CheckCircle' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775805909Z 10:36  Error: 'Key' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77580783Z 13:29  Error: Expected a `const` instead of a literal type assertion.  @typescript-eslint/prefer-as-const
+2026-01-30T07:17:07.77580955Z 34:11  Error: 'router' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.77582076Z 146:27  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.77582356Z 170:59  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.77582675Z 205:44  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.77582859Z 225:46  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.7758304Z 225:60  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.77583291Z 225:80  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775841Z 225:91  Error: `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775843861Z 251:34  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+2026-01-30T07:17:07.775846301Z 
+2026-01-30T07:17:07.77584905Z ./src/components/resume/ResumeControlPanel.tsx
+2026-01-30T07:17:07.775851741Z 4:27  Error: 'Loader2' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775854421Z 57:37  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775857231Z 
+2026-01-30T07:17:07.775859931Z ./src/components/resume/ResumeEditorModal.tsx
+2026-01-30T07:17:07.775862431Z 7:17  Error: 'Divider' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775865711Z 235:9  Error: Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free.  @typescript-eslint/ban-ts-comment
+2026-01-30T07:17:07.775868111Z 
+2026-01-30T07:17:07.775870821Z ./src/components/resume/ResumeHistoryTable.tsx
+2026-01-30T07:17:07.775873451Z 4:10  Error: 'Button' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775876111Z 5:35  Error: 'MoreHorizontal' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775879541Z 6:10  Error: 'ApplicationStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775881921Z 
+2026-01-30T07:17:07.775884481Z ./src/components/resume/ResumePreviewPanel.tsx
+2026-01-30T07:17:07.775887122Z 4:73  Error: 'Share2' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775891151Z 14:18  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775893722Z 
+2026-01-30T07:17:07.775896272Z ./src/components/table/StatusBadge.tsx
+2026-01-30T07:17:07.775898892Z 1:10  Error: 'ApplicationStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775901172Z 
+2026-01-30T07:17:07.775903722Z ./src/components/table/TableRow.tsx
+2026-01-30T07:17:07.775906242Z 3:23  Error: 'ApplicationStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775908562Z 
+2026-01-30T07:17:07.775911102Z ./src/components/ui/DashboardFilter.tsx
+2026-01-30T07:17:07.775913442Z 4:10  Error: 'IconButton' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775916082Z 5:20  Error: 'useEffect' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775918942Z 44:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775921492Z 
+2026-01-30T07:17:07.775924002Z ./src/lib/constants.ts
+2026-01-30T07:17:07.775926582Z 1:144  Error: 'LogStatus' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775929083Z 1:155  Error: 'LogType' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775931432Z 
+2026-01-30T07:17:07.775934272Z ./src/lib/types.ts
+2026-01-30T07:17:07.775936923Z 98:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775939673Z 103:22  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775942333Z 104:20  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775944623Z 
+2026-01-30T07:17:07.775946993Z ./src/middleware.ts
+2026-01-30T07:17:07.775949383Z 30:48  Error: 'options' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775956593Z 
+2026-01-30T07:17:07.775959083Z ./src/services/dashboardService.ts
+2026-01-30T07:17:07.775961683Z 54:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775964193Z 56:28  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775966763Z 66:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775969413Z 83:36  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775971973Z 85:28  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775974604Z 
+2026-01-30T07:17:07.775978024Z ./src/services/emailService.ts
+2026-01-30T07:17:07.775981134Z 24:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.775983694Z 
+2026-01-30T07:17:07.775986684Z ./src/services/jobProfileService.ts
+2026-01-30T07:17:07.775989614Z 2:63  Error: 'UpdateJobProfilePayload' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775991384Z 69:7  Error: 'transformFrontendToBackend' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.775993104Z 69:73  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776007574Z 139:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776009744Z 163:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776011364Z 
+2026-01-30T07:17:07.776013414Z ./src/services/resumeService.ts
+2026-01-30T07:17:07.776015284Z 48:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776017154Z 58:59  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776018845Z 94:66  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776020525Z 94:80  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+2026-01-30T07:17:07.776022134Z 
+2026-01-30T07:17:07.776023814Z ./src/utils/supabase/server.ts
+2026-01-30T07:17:07.776025505Z 18:20  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.776027195Z 27:20  Error: 'error' is defined but never used.  @typescript-eslint/no-unused-vars
+2026-01-30T07:17:07.776028815Z 
+2026-01-30T07:17:07.776031065Z info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+2026-01-30T07:17:07.831049541Z ==> Build failed 😞
+2026-01-30T07:17:07.831063751Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
