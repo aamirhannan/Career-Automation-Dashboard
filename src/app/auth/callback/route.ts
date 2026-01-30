@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams, origin: requestOrigin } = new URL(request.url)
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || requestOrigin
   const code = searchParams.get('code')
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/dashboard'
